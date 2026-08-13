@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苏州乐园 - 森林世界 · 水世界 · 糖果世界</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Noto Sans SC', sans-serif; }
+
+        .hero-bg {
+            background: linear-gradient(135deg, #0f766e 0%, #065f46 50%, #064e3b 100%);
+        }
+
+        .glass-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #34d399, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .slide-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .slide-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .park-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #34d399;
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .ticket-card {
+            transition: all 0.3s ease;
+        }
+
+        .ticket-card:hover {
+            transform: scale(1.03);
+            border-color: #10b981;
+        }
+
+        .countdown-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .star-twinkle {
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .marquee {
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 overflow-x-hidden">
+
+    <!-- 顶部导航 -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold text-white tracking-wide">苏州乐园</span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#parks" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">三大园区</a>
+                    <a href="#projects" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">热门项目</a>
+                    <a href="#shows" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">精彩演出</a>
+                    <a href="#tickets" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">门票预订</a>
+                    <a href="#guide" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">游玩攻略</a>
+                </div>
+
+                <button onclick="toggleMobileMenu()" class="md:hidden text-white p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-emerald-900/95 backdrop-blur-lg">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#parks" class="block text-white/90 hover:text-white py-2">三大园区</a>
+                <a href="#projects" class="block text-white/90 hover:text-white py-2">热门项目</a>
+                <a href="#shows" class="block text-white/90 hover:text-white py-2">精彩演出</a>
+                <a href="#tickets" class="block text-white/90 hover:text-white py-2">门票预订</a>
+                <a href="#guide" class="block text-white/90 hover:text-white py-2">游玩攻略</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero-bg relative min-h-screen flex items-center justify-center overflow-hidden">
+        <!-- 装饰背景 -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-emerald-400/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-teal-400/15 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-400/10 rounded-full blur-3xl"></div>
+            <!-- 星星装饰 -->
+            <div class="absolute top-32 left-1/4 w-2 h-2 bg-white rounded-full star-twinkle"></div>
+            <div class="absolute top-48 right-1/3 w-1.5 h-1.5 bg-emerald-300 rounded-full star-twinkle" style="animation-delay:0.5s"></div>
+            <div class="absolute bottom-40 left-1/3 w-2 h-2 bg-teal-300 rounded-full star-twinkle" style="animation-delay:1s"></div>
+        </div>
+
+        <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
+            <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2 mb-6 border border-white/20">
+                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                <span class="text-emerald-200 text-sm font-medium">2026 暑期 WaterPop 造浪音乐季火热进行中</span>
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+                苏州乐园<br>
+                <span class="gradient-text">森林娱乐王国</span>
+            </h1>
+
+            <p class="text-lg md:text-xl text-emerald-100/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+                森林世界 · 森林水世界 · 糖果世界 · 外野商业<br>
+                三园一MALL，打造全时段、全年龄、全链条城市微度假目的地
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="#tickets" class="btn-glow bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:from-emerald-400 hover:to-teal-500 transition-all duration-300 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                    </svg>
+                    立即购票
+                </a>
+                <a href="#parks" class="glass-card text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/15 transition-all duration-300 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    探索园区
+                </a>
+            </div>
+
+            <!-- 数据统计 -->
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+                <div class="glass-card rounded-2xl p-4 text-center">
+                    <div class="text-3xl font-black text-emerald-300">30+</div>
+                    <div class="text-emerald-200/70 text-sm mt-1">游乐项目</div>
+                </div>
+                <div class="glass-card rounded-2xl p-4 text-center">
+                    <div class="text-3xl font-black text-emerald-300">4</div>
+                    <div class="text-emerald-200/70 text-sm mt-1">主题园区</div>
+                </div>
+                <div class="glass-card rounded-2xl p-4 text-center">
+                    <div class="text-3xl font-black text-emerald-300">20+</div>
+                    <div class="text-emerald-200/70 text-sm mt-1">主题演艺</div>
+                </div>
+                <div class="glass-card rounded-2xl p-4 text-center">
+                    <div class="text-3xl font-black text-emerald-300">290+</div>
+                    <div class="text-emerald-200/70 text-sm mt-1">全球节点</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 滚动提示 -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 float-animation">
+            <svg class="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 三大园区 -->
+    <section id="parks" class="py-20 md:py-28 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 slide-in">
+                <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Our Parks</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">三大园区 · 一MALL商业</h2>
+                <p class="text-gray-500 mt-4 max-w-2xl mx-auto">苏州乐园以"三园一MALL"全域矩阵，协同打造全时段、全年龄、全链条城市微度假目的地</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 森林世界 -->
+                <div class="park-card bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-6 border border-emerald-100 transition-all duration-300 cursor-pointer slide-in" onclick="showParkDetail('forest')">
+                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-4">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">森林世界</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">6大特色区域，30+游乐项目，冲上云霄过山车、雪域双雄跳楼机、旋转木马等，日夜双景体验。</p>
+                    <div class="flex items-center text-emerald-600 text-sm font-medium">
+                        <span>了解详情</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 水世界 -->
+                <div class="park-card bg-gradient-to-br from-cyan-50 to-blue-50 rounded-3xl p-6 border border-cyan-100 transition-all duration-300 cursor-pointer slide-in" style="transition-delay:0.1s" onclick="showParkDetail('water')">
+                    <div class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">森林水世界</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">四大清凉主题区，十三大明星水项目。WaterPop造浪音乐季，白天休闲度假，夜间潮玩蹦迪。</p>
+                    <div class="flex items-center text-cyan-600 text-sm font-medium">
+                        <span>了解详情</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 糖果世界 -->
+                <div class="park-card bg-gradient-to-br from-pink-50 to-rose-50 rounded-3xl p-6 border border-pink-100 transition-all duration-300 cursor-pointer slide-in" style="transition-delay:0.2s" onclick="showParkDetail('candy')">
+                    <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center mb-4">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">糖果世界</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">1.2万㎡全室内恒温空间，20余项亲子项目。姜饼人故事会、科学实验秀、泡泡秀等全新演出。</p>
+                    <div class="flex items-center text-pink-600 text-sm font-medium">
+                        <span>了解详情</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 外野商业 -->
+                <div class="park-card bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 border border-amber-100 transition-all duration-300 cursor-pointer slide-in" style="transition-delay:0.3s" onclick="showParkDetail('mall')">
+                    <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Wide Wild 外野</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">特色餐饮、潮流零售与休闲体验业态，补齐吃住行游购娱消费闭环，延展游客驻留时间。</p>
+                    <div class="flex items-center text-amber-600 text-sm font-medium">
+                        <span>了解详情</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 热门项目 -->
+    <section id="projects" class="py-20 md:py-28 bg-gray-900 relative overflow-hidden">
+        <div class="absolute inset-0">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16 slide-in">
+                <span class="text-emerald-400 font-semibold text-sm tracking-widest uppercase">Attractions</span>
+                <h2 class="text-4xl md:text-5xl font-black text-white mt-2">热门游乐项目</h2>
+                <p class="text-gray-400 mt-4 max-w-2xl mx-auto">从惊险刺激到温馨浪漫，总有一款适合你</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in">
+                    <div class="h-48 bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">惊险</span>
+                            <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">森林世界</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">冲上云霄</h3>
+                        <p class="text-gray-400 text-sm">过山车尖叫划破夜空，体验极速飞驰的快感，感受风驰电掣的刺激。</p>
+                    </div>
+                </div>
+
+                <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.1s">
+                    <div class="h-48 bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">刺激</span>
+                            <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">森林世界</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">雪域双雄</h3>
+                        <p class="text-gray-400 text-sm">跳楼机急速下坠，惊呼声此起彼伏，挑战你的胆量极限。</p>
+                    </div>
+                </div>
+
+                <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.2s">
+                    <div class="h-48 bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-pink-500/20 text-pink-400 text-xs font-bold px-2 py-1 rounded-full">浪漫</span>
+                            <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">森林世界</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">旋转木马</h3>
+                        <p class="text-gray-400 text-sm">灯光在夜色中格外温柔，古典与浪漫相间的心动体验。</p>
+                    </div>
+                </div>
+
+                <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in">
+                    <div class="h-48 bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-cyan-500/20 text-cyan-400 text-xs font-bold px-2 py-1 rounded-full">清凉</span>
+                            <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">水世界</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">造浪池</h3>
+                        <p class="text-gray-400 text-sm">每半小时人造海浪，浪高0.3m至1.2m，六种浪群轮番来袭。</p>
+                    </div>
+                </div>
+
+                <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.1s">
+                    <div class="h-48 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-1 rounded-full">探险</span>
+                            <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">水世界</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">暴风谷</h3>
+                        <p class="text-gray-400 text-sm">急速丛林水滑道，穿越雨林异域景观，体验速度与激情。</p>
+                    </div>
+                </div>
+
+                <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.2s">
+                    <div class="h-48 bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-violet-500/20 text-violet-400 text-xs font-bold px-2 py-1 rounded-full">亲子</span>
+                            <span class="bg-pink-500/20 text-pink-400 text-xs font-bold px-2 py-1 rounded-full">糖果世界</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">科学实验秀</h3>
+                        <p class="text-gray-400 text-sm">全新创意演出，孩子们围坐一圈听得入神，小脸上写满好奇。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 精彩演出 -->
+    <section id="shows" class="py-20 md:py-28 bg-gradient-to-b from-emerald-50 to-teal-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 slide-in">
+                <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Shows & Events</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">精彩演出 · 日夜狂欢</h2>
+                <p class="text-gray-500 mt-4 max-w-2xl mx-auto">20+场主题演艺，从白天到夜晚，快乐不停歇</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- 日间演出 -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg slide-in">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">日间精彩</h3>
+                            <p class="text-gray-500 text-sm">09:15 - 17:15</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-emerald-50 transition-colors">
+                            <div class="w-16 text-center">
+                                <span class="text-emerald-600 font-bold text-sm">全天</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">森林萌宝大巡游</h4>
+                                <p class="text-gray-500 text-sm">可爱萌宠互动，甜蜜萌宝全天陪伴</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-emerald-50 transition-colors">
+                            <div class="w-16 text-center">
+                                <span class="text-emerald-600 font-bold text-sm">多场次</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">NPC互动演出</h4>
+                                <p class="text-gray-500 text-sm">高颜值心愿互动，20+场即兴街头表演</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-emerald-50 transition-colors">
+                            <div class="w-16 text-center">
+                                <span class="text-emerald-600 font-bold text-sm">周末</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">明星音乐会</h4>
+                                <p class="text-gray-500 text-sm">飞儿乐团、周慧敏、袁一琦等轮番登场</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 夜间演出 -->
+                <div class="bg-gray-900 rounded-3xl p-8 shadow-lg slide-in" style="transition-delay:0.1s">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">夜间狂欢</h3>
+                            <p class="text-gray-400 text-sm">17:15 - 22:00（周末/节假日）</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4 p-4 bg-gray-800 rounded-2xl hover:bg-gray-700 transition-colors">
+                            <div class="w-16 text-center">
+                                <span class="text-indigo-400 font-bold text-sm"> nightly</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">星愿狂想之夜</h4>
+                                <p class="text-gray-400 text-sm">融合震撼打击、奇幻光影、时尚走秀</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-gray-800 rounded-2xl hover:bg-gray-700 transition-colors">
+                            <div class="w-16 text-center">
+                                <span class="text-indigo-400 font-bold text-sm"> nightly</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">幻光花车巡游</h4>
+                                <p class="text-gray-400 text-sm">夜间花车巡游队伍穿行园区，流光溢彩</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-gray-800 rounded-2xl hover:bg-gray-700 transition-colors">
+                            <div class="w-16 text-center">
+                                <span class="text-indigo-400 font-bold text-sm">周末</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">无人机烟花秀</h4>
+                                <p class="text-gray-400 text-sm">无人机化身新年倒数灯牌，万人共同点亮</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 门票预订 -->
+    <section id="tickets" class="py-20 md:py-28 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 slide-in">
+                <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Tickets</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">门票预订</h2>
+                <p class="text-gray-500 mt-4 max-w-2xl mx-auto">提前购票，畅玩无忧</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- 成人票 -->
+                <div class="ticket-card bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 border-2 border-gray-200 text-center slide-in">
+                    <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">成人票</h3>
+                    <div class="text-4xl font-black text-emerald-600 mb-2">
+                        <span class="text-2xl">¥</span>218
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">身高1.5米（含）以上</p>
+                    <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            当日有效，限入园1次
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            30+游乐项目一票畅玩
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            演艺免费观看
+                        </li>
+                    </ul>
+                    <button onclick="alert('演示页面：购票功能需接入真实支付系统')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">立即预订</button>
+                </div>
+
+                <!-- 优惠票 -->
+                <div class="ticket-card bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 border-2 border-emerald-400 text-center relative slide-in" style="transition-delay:0.1s">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">推荐</div>
+                    <div class="w-16 h-16 bg-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">优惠票</h3>
+                    <div class="text-4xl font-black text-emerald-600 mb-2">
+                        <span class="text-2xl">¥</span>118
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">老人 / 儿童（1.2-1.5米）</p>
+                    <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            需持有效证件入园
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            30+游乐项目一票畅玩
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            演艺免费观看
+                        </li>
+                    </ul>
+                    <button onclick="alert('演示页面：购票功能需接入真实支付系统')" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 rounded-xl font-bold hover:from-emerald-600 hover:to-teal-700 transition shadow-lg">立即预订</button>
+                </div>
+
+                <!-- 夜场票 -->
+                <div class="ticket-card bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 border-2 border-indigo-200 text-center slide-in" style="transition-delay:0.2s">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">夜场票</h3>
+                    <div class="text-4xl font-black text-indigo-600 mb-2">
+                        <span class="text-2xl">¥</span>69<span class="text-lg text-gray-400 line-through ml-2">¥129</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">限时特惠 · 提前一天购买</p>
+                    <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            16:00后入园
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            含夜间大秀 & 烟花秀
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            周末明星演出
+                        </li>
+                    </ul>
+                    <button onclick="alert('演示页面：购票功能需接入真实支付系统')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">立即预订</button>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center text-gray-500 text-sm slide-in">
+                <p>免票政策：身高未达1.2米（含）的儿童免费入园，1名购票成人仅限携带1名免票儿童</p>
+                <p class="mt-1">营业时间：周一至周五 09:15-17:15 | 周六至周日/节假日 09:15-22:00</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 游玩攻略 -->
+    <section id="guide" class="py-20 md:py-28 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 slide-in">
+                <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Guide</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">游玩攻略</h2>
+                <p class="text-gray-500 mt-4 max-w-2xl mx-auto">交通指南 & 贴心提示</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- 交通指南 -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg slide-in">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        交通指南
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4 p-4 bg-emerald-50 rounded-2xl">
+                            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">地铁出行</h4>
+                                <p class="text-gray-600 text-sm">乘坐地铁至苏州乐园站，出站后换乘免费接驳车直达园区</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl">
+                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">公交出行</h4>
+                                <p class="text-gray-600 text-sm">乘坐42路、51路、313路、353路至苏州乐园首末站下车</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl">
+                            <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">自驾出行</h4>
+                                <p class="text-gray-600 text-sm">导航至"苏州乐园森林世界"，市内走长江路即可到达，园区设有大型停车场</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-4 bg-purple-50 rounded-2xl">
+                            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">免费接驳车</h4>
+                                <p class="text-gray-600 text-sm">往返地铁站和酒店，班次加密，具体时刻表请关注官方小程序</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 贴心提示 -->
+                <div class="bg-white rounded-3xl p-8 shadow-lg slide-in" style="transition-delay:0.1s">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        贴心提示
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-emerald-600 text-xs font-bold">1</span>
+                            </div>
+                            <p class="text-gray-600 text-sm"><strong class="text-gray-900">天气注意：</strong>当日气温低于5℃时，部分室外设备会延时开放，请关注天气预报。</p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-emerald-600 text-xs font-bold">2</span>
+                            </div>
+                            <p class="text-gray-600 text-sm"><strong class="text-gray-900">防暑降温：</strong>夏季游玩建议携带遮阳帽、防晒霜。园区提供降温喷雾、免费饮水、遮阳凉棚。</p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-emerald-600 text-xs font-bold">3</span>
+                            </div>
+                            <p class="text-gray-600 text-sm"><strong class="text-gray-900">冻原王国：</strong>近7000㎡零下冰雪馆，是夏日避暑天堂，记得带上厚外套哦！</p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-emerald-600 text-xs font-bold">4</span>
+                            </div>
+                            <p class="text-gray-600 text-sm"><strong class="text-gray-900">烟花秀占位：</strong>火秀提前20分钟占位，第一排体验翻倍！</p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-emerald-600 text-xs font-bold">5</span>
+                            </div>
+                            <p class="text-gray-600 text-sm"><strong class="text-gray-900">灵活退改：</strong>符合条件可退票或7日内免费重游，出行更安心。</p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-emerald-600 text-xs font-bold">6</span>
+                            </div>
+                            <p class="text-gray-600 text-sm"><strong class="text-gray-900">实时信息：</strong>建议通过"苏州乐园"微信小程序获取实时演出更新和项目开放情况。</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
+                        <p class="text-emerald-800 text-sm font-medium text-center">
+                            📍 地址：苏州市高新区大阳山国家森林公园东南侧
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </div>
+                        <span class="text-lg font-bold">苏州乐园</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">森林娱乐王国，三园一MALL，打造全时段、全年龄、全链条城市微度假目的地。</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-4">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#parks" class="hover:text-emerald-400 transition">三大园区</a></li>
+                        <li><a href="#projects" class="hover:text-emerald-400 transition">热门项目</a></li>
+                        <li><a href="#shows" class="hover:text-emerald-400 transition">精彩演出</a></li>
+                        <li><a href="#tickets" class="hover:text-emerald-400 transition">门票预订</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-4">帮助中心</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#guide" class="hover:text-emerald-400 transition">交通指南</a></li>
+                        <li><span class="hover:text-emerald-400 transition cursor-pointer">常见问题</span></li>
+                        <li><span class="hover:text-emerald-400 transition cursor-pointer">游客须知</span></li>
+                        <li><span class="hover:text-emerald-400 transition cursor-pointer">联系我们</span></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-4">关注我们</h4>
+                    <p class="text-gray-400 text-sm mb-4">关注"苏州乐园"微信公众号，获取最新活动资讯</p>
+                    <div class="flex gap-3">
+                        <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition cursor-pointer">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 00.167-.054l1.903-1.114a.864.864 0 01.717-.098 10.16 10.16 0 002.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348z"/></svg>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition cursor-pointer">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+                <p> 苏州乐园 · 本页面为个人学习测试用，非官方网站</p>
+                <p class="mt-2">数据来源于公开网络信息，仅供参考，请以官方公布为准</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 园区详情弹窗 -->
+    <div id="park-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeParkDetail()"></div>
+        <div class="relative bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl transform transition-all scale-95 opacity-0" id="park-modal-content">
+            <button onclick="closeParkDetail()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div id="park-modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-emerald-900/95', 'backdrop-blur-lg', 'shadow-lg');
+                navbar.classList.remove('bg-transparent');
+            } else {
+                navbar.classList.remove('bg-emerald-900/95', 'backdrop-blur-lg', 'shadow-lg');
+                navbar.classList.add('bg-transparent');
+            }
+        });
+
+        // 移动端菜单
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.slide-in').forEach(el => observer.observe(el));
+
+        // 园区详情数据
+        const parkDetails = {
+            forest: {
+                title: '森林世界',
+                color: 'emerald',
+                content: `
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">森林世界</h3>
+                        <p class="text-emerald-600 font-medium">6大特色区域 · 30+游乐项目</p>
+                    </div>
+                    <div class="space-y-3 text-sm text-gray-600">
+                        <p><strong class="text-gray-900">森灵树广场：</strong>马达加斯加热带丛林环绕，格林号/苏尼号列车、文创商店。</p>
+                        <p><strong class="text-gray-900">藤蔓森林：</strong>超长樱花步道，紫藤花及泡桐环绕，蝴蝶秀场演艺。</p>
+                        <p><strong class="text-gray-900">水雾森林：</strong>穿越生态雨林，环游亲水秘境。</p>
+                        <p><strong class="text-gray-900">涂鸦森林：</strong>创意涂鸦艺术区，适合拍照打卡。</p>
+                        <p><strong class="text-gray-900">冻原森林：</strong>近7000㎡零下冰雪馆，夏日避暑天堂。</p>
+                        <p><strong class="text-gray-900">黑暗森林：</strong>神秘探险区域，刺激体验。</p>
+                    </div>
+                `
+            },
+            water: {
+                title: '森林水世界',
+                color: 'cyan',
+                content: `
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">森林水世界</h3>
+                        <p class="text-cyan-600 font-medium">四大清凉主题 · 十三大明星水项目</p>
+                    </div>
+                    <div class="space-y-3 text-sm text-gray-600">
+                        <p><strong class="text-gray-900">热带风情休闲区：</strong>沉浸式雨林异域景观，夏威夷般度假质感。</p>
+                        <p><strong class="text-gray-900">虫虫雨林欢乐区：</strong>亲子趣味戏水，伊拉卡卡寻宝池。</p>
+                        <p><strong class="text-gray-900">律动海滨狂欢区：</strong>造浪池电音主场，MC/DJ硬核控场。</p>
+                        <p><strong class="text-gray-900">神秘森林探险区：</strong>高速滑道，冲入阿劳特拉湖等刺激项目。</p>
+                        <p class="text-cyan-600 font-medium mt-4"> WaterPop造浪音乐季：流行、电音、摇滚、K-pop、嘻哈等30+场演出贯穿全天！</p>
+                    </div>
+                `
+            },
+            candy: {
+                title: '糖果世界',
+                color: 'pink',
+                content: `
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">糖果世界</h3>
+                        <p class="text-pink-600 font-medium">1.2万㎡全室内恒温 · 20+亲子项目</p>
+                    </div>
+                    <div class="space-y-3 text-sm text-gray-600">
+                        <p><strong class="text-gray-900">全新演出：</strong>《姜饼人故事会》《科学实验秀》《泡泡秀》等创意满满。</p>
+                        <p><strong class="text-gray-900">手作工坊：</strong>彩绘凉帽、涂鸦凉扇，家长和孩子一起动手。</p>
+                        <p><strong class="text-gray-900">财商任务：</strong>糖果币财商任务体系，兼顾趣味游乐与能力培养。</p>
+                        <p><strong class="text-gray-900">恒温空间：</strong>全室内恒温，无惧高温暴雨，四季皆宜。</p>
+                    </div>
+                `
+            },
+            mall: {
+                title: 'Wide Wild 外野',
+                color: 'amber',
+                content: `
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">Wide Wild 外野</h3>
+                        <p class="text-amber-600 font-medium">三园配套商业枢纽</p>
+                    </div>
+                    <div class="space-y-3 text-sm text-gray-600">
+                        <p><strong class="text-gray-900">特色餐饮：</strong>汇集各地美食，满足全家口味。</p>
+                        <p><strong class="text-gray-900">潮流零售：</strong>文创商品、主题周边、纪念品。</p>
+                        <p><strong class="text-gray-900">休闲体验：</strong>逛累了的游客在这里歇脚、用餐、购物。</p>
+                        <p><strong class="text-gray-900">消费闭环：</strong>补齐吃住行游购娱，延展游客驻留时间。</p>
+                    </div>
+                `
+            }
+        };
+
+        function showParkDetail(park) {
+            const modal = document.getElementById('park-modal');
+            const content = document.getElementById('park-modal-content');
+            const body = document.getElementById('park-modal-body');
+            const data = parkDetails[park];
+
+            body.innerHTML = data.content;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeParkDetail() {
+            const modal = document.getElementById('park-modal');
+            const content = document.getElementById('park-modal-content');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
