@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苏州乐园 CMS 管理后台</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+* { font-family: 'Noto Sans SC', sans-serif; }
+body { background: #f3f4f6; }
+.sidebar { width: 260px; background: #065f46; min-height: 100vh; position: fixed; left: 0; top: 0; z-index: 50; }
+.main-content { margin-left: 260px; min-height: 100vh; }
+.module-card { transition: all 0.3s; }
+.module-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+.field-group { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 16px; background: #fff; }
+.field-group:focus-within { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+.char-count { font-size: 12px; color: #9ca3af; transition: color 0.3s; }
+.char-count.warning { color: #f59e0b; }
+.char-count.danger { color: #ef4444; }
+.preview-box { background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 12px; padding: 20px; text-align: center; }
+.preview-box img { max-width: 100%; max-height: 200px; border-radius: 8px; }
+.toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; font-weight: 500; z-index: 100; transform: translateX(120%); transition: transform 0.3s; }
+.toast.show { transform: translateX(0); }
+.toast.success { background: #10b981; }
+.toast.error { background: #ef4444; }
+.toast.info { background: #3b82f6; }
+.loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #e5e7eb; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.tab-btn { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.tab-btn.active { background: #065f46; color: white; }
+.tab-btn:not(.active):hover { background: #e5e7eb; }
+.permission-toggle { width: 44px; height: 24px; background: #e5e7eb; border-radius: 12px; position: relative; cursor: pointer; transition: background 0.3s; }
+.permission-toggle.active { background: #10b981; }
+.permission-toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.permission-toggle.active::after { transform: translateX(20px); }
+</style>
+</head>
+<body>
+
+<!-- Toast 通知 -->
+<div id="toast" class="toast"></div>
+
+<!-- 登录页面 -->
+<div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 to-teal-800">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">苏州乐园 CMS</h1>
+      <p class="text-gray-500 text-sm mt-1">内容管理系统</p>
+    </div>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+        <input type="text" id="login-username" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition" placeholder="请输入用户名" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+        <input type="password" id="login-password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition" placeholder="请输入密码" required>
+      </div>
+      <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 rounded-xl font-bold hover:from-emerald-500 hover:to-teal-500 transition flex items-center justify-center gap-2">
+        <span id="login-btn-text">登录</span>
+        <span id="login-btn-loading" class="loading hidden"></span>
+      </button>
+    </form>
+    <p class="text-center text-gray-400 text-xs mt-6">默认管理员账号: admin / admin123</p>
+  </div>
+</div>
+
+<!-- 管理后台主界面 -->
+<div id="admin-page" class="hidden">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="p-6">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-white font-bold">苏州乐园</h2>
+          <p class="text-emerald-300 text-xs">CMS 管理后台</p>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <button onclick="showTab('dashboard')" id="nav-dashboard" class="tab-btn active w-full text-left text-white/90 hover:bg-white/10">
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            仪表盘
+          </span>
+        </button>
+        <button onclick="showTab('content')" id="nav-content" class="tab-btn w-full text-left text-white/90 hover:bg-white/10">
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            内容管理
+          </span>
+        </button>
+        <button onclick="showTab('users')" id="nav-users" class="tab-btn w-full text-left text-white/90 hover:bg-white/10 hidden" data-admin-only>
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            用户管理
+          </span>
+        </button>
+        <button onclick="showTab('permissions')" id="nav-permissions" class="tab-btn w-full text-left text-white/90 hover:bg-white/10 hidden" data-admin-only>
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            权限管理
+          </span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold" id="user-avatar">A</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-white font-medium text-sm truncate" id="user-name">Admin</p>
+          <p class="text-emerald-300 text-xs" id="user-role">管理员</p>
+        </div>
+        <button onclick="logout()" class="text-white/60 hover:text-white transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <!-- 顶部栏 -->
+    <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
+      <h1 id="page-title" class="text-xl font-bold text-gray-900">仪表盘</h1>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-500" id="api-status">API: 检查中...</span>
+        <a href="你的GitHubPages地址/index.html" target="_blank" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          查看网站
+        </a>
+      </div>
+    </header>
+
+    <div class="p-8">
+      <!-- 仪表盘 -->
+      <div id="tab-dashboard" class="tab-content">
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              </div>
+              <span class="text-emerald-600 text-sm font-medium">可编辑</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900" id="dash-module-count">0</h3>
+            <p class="text-gray-500 text-sm">个内容模块</p>
+          </div>
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </div>
+              <span class="text-blue-600 text-sm font-medium">已配置</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900" id="dash-content-count">0</h3>
+            <p class="text-gray-500 text-sm">条内容字段</p>
+          </div>
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <span class="text-purple-600 text-sm font-medium">实时</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900" id="dash-last-update">刚刚</h3>
+            <p class="text-gray-500 text-sm">上次更新</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 class="font-bold text-gray-900 mb-4">快速操作</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button onclick="showTab('content')" class="p-4 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition text-left">
+              <div class="text-emerald-600 font-bold mb-1">编辑内容</div>
+              <div class="text-emerald-600/70 text-sm">修改网站文字、价格</div>
+            </button>
+            <button onclick="showTab('users')" class="p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition text-left hidden" data-admin-only>
+              <div class="text-blue-600 font-bold mb-1">添加用户</div>
+              <div class="text-blue-600/70 text-sm">创建新编辑账号</div>
+            </button>
+            <button onclick="showTab('permissions')" class="p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition text-left hidden" data-admin-only>
+              <div class="text-purple-600 font-bold mb-1">分配权限</div>
+              <div class="text-purple-600/70 text-sm">设置模块编辑权限</div>
+            </button>
+            <a href="你的GitHubPages地址/index.html" target="_blank" class="p-4 bg-amber-50 rounded-xl hover:bg-amber-100 transition text-left block">
+              <div class="text-amber-600 font-bold mb-1">预览网站</div>
+              <div class="text-amber-600/70 text-sm">在新窗口打开</div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 内容管理 -->
+      <div id="tab-content" class="tab-content hidden">
+        <div class="flex gap-6">
+          <!-- 模块列表 -->
+          <div class="w-64 flex-shrink-0">
+            <h3 class="font-bold text-gray-900 mb-4">选择模块</h3>
+            <div class="space-y-2" id="module-list">
+              <!-- 动态生成 -->
+            </div>
+          </div>
+
+          <!-- 编辑区 -->
+          <div class="flex-1">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6" id="editor-panel">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="font-bold text-gray-900" id="editor-title">选择一个模块开始编辑</h3>
+                <div class="flex gap-2">
+                  <button onclick="previewChanges()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    预览
+                  </button>
+                  <button onclick="saveModule()" id="save-btn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium flex items-center gap-1">
+                    <span id="save-btn-text">保存修改</span>
+                    <span id="save-btn-loading" class="loading hidden"></span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="editor-fields">
+                <p class="text-gray-400 text-center py-12">请从左侧选择一个模块</p>
+              </div>
+            </div>
+
+            <!-- 预览区 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6 hidden" id="preview-panel">
+              <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                实时预览
+              </h3>
+              <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <iframe id="preview-iframe" class="w-full h-96 border-0"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户管理 -->
+      <div id="tab-users" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-gray-900">用户列表</h3>
+            <button onclick="showAddUserModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              添加用户
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3 text-left font-medium text-gray-700 rounded-tl-lg">ID</th>
+                  <th class="px-4 py-3 text-left font-medium text-gray-700">用户名</th>
+                  <th class="px-4 py-3 text-left font-medium text-gray-700">角色</th>
+                  <th class="px-4 py-3 text-left font-medium text-gray-700">创建时间</th>
+                  <th class="px-4 py-3 text-right font-medium text-gray-700 rounded-tr-lg">操作</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-gray-100">
+                <!-- 动态生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 权限管理 -->
+      <div id="tab-permissions" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-gray-900">模块权限分配</h3>
+            <p class="text-gray-500 text-sm">点击开关即可授予/撤销编辑权限</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3 text-left font-medium text-gray-700 rounded-tl-lg">用户</th>
+                  <th class="px-4 py-3 text-center font-medium text-gray-700">Hero</th>
+                  <th class="px-4 py-3 text-center font-medium text-gray-700">三大园区</th>
+                  <th class="px-4 py-3 text-center font-medium text-gray-700">热门项目</th>
+                  <th class="px-4 py-3 text-center font-medium text-gray-700">精彩演出</th>
+                  <th class="px-4 py-3 text-center font-medium text-gray-700">门票</th>
+                  <th class="px-4 py-3 text-center font-medium text-gray-700 rounded-tr-lg">攻略</th>
+                </tr>
+              </thead>
+              <tbody id="permissions-table-body" class="divide-y divide-gray-100">
+                <!-- 动态生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 添加用户弹窗 -->
+<div id="add-user-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideAddUserModal()"></div>
+  <div class="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+    <h3 class="text-lg font-bold text-gray-900 mb-4">添加新用户</h3>
+    <form id="add-user-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+        <input type="text" id="new-username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="请输入用户名" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+        <input type="password" id="new-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="至少6位" required>
+        <p class="text-xs text-gray-400 mt-1">密码至少6位字符</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">角色</label>
+        <select id="new-role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+          <option value="editor">编辑 (editor)</option>
+          <option value="admin">管理员 (admin)</option>
+        </select>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="hideAddUserModal()" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">取消</button>
+        <button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">确认添加</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ============================================
+// Supabase 配置 - 修改为你的项目信息
+// ============================================
+const SUPABASE_URL = 'https://ictdptkcnxejofaaijye.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljdGRwdGtjbnhlam9mYWFpanllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2Njg2NTUsImV4cCI6MjEwMjI0NDY1NX0.M5eOAuXJwH1A7wWh5ge8EEGFhTok1aDvycYNoG26fh4';
+const FRONTEND_URL = 'https://ershisiyuanyang.github.io/suzhou-leyuan';
+
+const CONFIG = {
+  JWT_SECRET: 'suzhou-leyuan-cms-secret-2026-change-me',
+  TOKEN_EXPIRY_HOURS: 24
+};
+
+// 模块配置
+const MODULES = {
+  hero: { name: '首页 Hero', icon: '🏠', desc: '主标题、副标题、描述、按钮' },
+  parks: { name: '三大园区', icon: '🎢', desc: '森林世界、水世界、糖果世界、外野' },
+  projects: { name: '热门项目', icon: '⭐', desc: '项目标题和描述' },
+  shows: { name: '精彩演出', icon: '🎭', desc: '日间/夜间演出内容' },
+  tickets: { name: '门票预订', icon: '🎫', desc: '票价和说明文字' },
+  guide: { name: '游玩攻略', icon: '📍', desc: '交通和提示信息' },
+  footer: { name: '页脚信息', icon: '📝', desc: '版权和免责声明' }
+};
+
+let currentUser = null;
+let currentToken = localStorage.getItem('cms_token');
+let allContent = {};
+let currentModule = null;
+let editingValues = {};
+
+// ============================================
+// Supabase API 封装
+// ============================================
+async function sbRequest(path, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// 将 Supabase 数组格式转换为对象格式
+function transformContent(data) {
+  const result = {};
+  data.forEach(row => {
+    if (!result[row.module]) result[row.module] = {};
+    result[row.module][row.key] = {
+      value: row.value,
+      type: row.type,
+      label: row.label,
+      placeholder: row.placeholder,
+      max_length: row.max_length
+    };
+  });
+  return result;
+}
+
+// PBKDF2 密码哈希
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']
+  );
+  const hash = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  return {
+    salt: Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join(''),
+    hash: Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
+  };
+}
+
+async function verifyPassword(password, saltHex, hashHex) {
+  const encoder = new TextEncoder();
+  const salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']
+  );
+  const hash = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const computed = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return computed === hashHex;
+}
+
+// JWT 签名
+async function signToken(payload, secret) {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encodedHeader = btoa(JSON.stringify(header));
+  const encodedPayload = btoa(JSON.stringify(payload));
+  const data = `${encodedHeader}.${encodedPayload}`;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
+  const encodedSig = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return `${data}.${encodedSig}`;
+}
+
+async function verifyToken(token, secret) {
+  try {
+    const [h, p, s] = token.split('.');
+    if (!h || !p || !s) return null;
+    const data = `${h}.${p}`;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
+    );
+    const signature = Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const valid = await crypto.subtle.verify('HMAC', key, signature, encoder.encode(data));
+    if (!valid) return null;
+    return JSON.parse(atob(p));
+  } catch (e) {
+    return null;
+  }
+}
+
+// 获取当前用户
+async function getCurrentUser() {
+  if (!currentToken) return null;
+  const payload = await verifyToken(currentToken, CONFIG.JWT_SECRET);
+  if (!payload || !payload.sub) return null;
+
+  try {
+    const users = await sbRequest(`/cms_users?id=eq.${payload.sub}&select=*`);
+    if (!users || users.length === 0) return null;
+
+    const user = users[0];
+    const perms = await sbRequest(`/cms_permissions?user_id=eq.${user.id}&select=module,can_edit`);
+    user.permissions = perms || [];
+    return user;
+  } catch (e) {
+    return null;
+  }
+}
+
+function canEditModule(user, module) {
+  if (user.role === 'admin') return true;
+  const perm = user.permissions.find(p => p.module === module);
+  return perm && perm.can_edit === true;
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('a[href*="你的GitHubPages地址"]').forEach(a => {
+    a.href = a.href.replace('你的GitHubPages地址/index.html', FRONTEND_URL + '/index.html');
+  });
+  if (currentToken) {
+    checkAuth();
+  }
+});
+
+// 登录
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+
+  document.getElementById('login-btn-text').classList.add('hidden');
+  document.getElementById('login-btn-loading').classList.remove('hidden');
+
+  try {
+    const users = await sbRequest(`/cms_users?username=eq.${encodeURIComponent(username)}&select=*`);
+    if (!users || users.length === 0) {
+      showToast('用户名或密码错误', 'error');
+      return;
+    }
+
+    const user = users[0];
+    const [salt, hash] = user.password_hash.split(':');
+    const valid = await verifyPassword(password, salt, hash);
+
+    if (!valid) {
+      showToast('用户名或密码错误', 'error');
+      return;
+    }
+
+    const perms = await sbRequest(`/cms_permissions?user_id=eq.${user.id}&select=module,can_edit`);
+
+    const token = await signToken({ 
+      sub: user.id, 
+      username: user.username, 
+      role: user.role,
+      exp: Date.now() + CONFIG.TOKEN_EXPIRY_HOURS * 3600 * 1000
+    }, CONFIG.JWT_SECRET);
+
+    currentToken = token;
+    localStorage.setItem('cms_token', currentToken);
+    currentUser = { ...user, permissions: perms || [] };
+
+    showAdminPage();
+    showToast('登录成功', 'success');
+  } catch (e) {
+    showToast('网络错误: ' + e.message, 'error');
+  } finally {
+    document.getElementById('login-btn-text').classList.remove('hidden');
+    document.getElementById('login-btn-loading').classList.add('hidden');
+  }
+});
+
+// 检查登录状态
+async function checkAuth() {
+  try {
+    const user = await getCurrentUser();
+    if (user) {
+      currentUser = user;
+      showAdminPage();
+    } else {
+      logout();
+    }
+  } catch (e) {
+    document.getElementById('api-status').textContent = 'API: 无法连接';
+    document.getElementById('api-status').classList.add('text-red-500');
+  }
+}
+
+// 显示管理页面
+function showAdminPage() {
+  document.getElementById('login-page').classList.add('hidden');
+  document.getElementById('admin-page').classList.remove('hidden');
+
+  document.getElementById('user-name').textContent = currentUser.username;
+  document.getElementById('user-avatar').textContent = currentUser.username[0].toUpperCase();
+  document.getElementById('user-role').textContent = currentUser.role === 'admin' ? '管理员' : '编辑';
+
+  if (currentUser.role === 'admin') {
+    document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.remove('hidden'));
+  }
+
+  document.getElementById('api-status').textContent = 'API: 已连接';
+  document.getElementById('api-status').classList.add('text-emerald-600');
+
+  loadDashboard();
+  loadContentModules();
+}
+
+// 退出登录
+function logout() {
+  currentToken = null;
+  currentUser = null;
+  localStorage.removeItem('cms_token');
+  document.getElementById('admin-page').classList.add('hidden');
+  document.getElementById('login-page').classList.remove('hidden');
+  document.getElementById('login-form').reset();
+}
+
+// 切换标签页
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById(`tab-${tab}`).classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(`nav-${tab}`).classList.add('active');
+  document.getElementById('page-title').textContent = {
+    dashboard: '仪表盘',
+    content: '内容管理',
+    users: '用户管理',
+    permissions: '权限管理'
+  }[tab];
+
+  if (tab === 'users') loadUsers();
+  if (tab === 'permissions') loadPermissions();
+}
+
+// 加载仪表盘数据
+async function loadDashboard() {
+  try {
+    const data = await sbRequest('/cms_content?select=*');
+    allContent = transformContent(data);
+    const modules = Object.keys(allContent);
+    let count = 0;
+    modules.forEach(m => { count += Object.keys(allContent[m]).length; });
+
+    document.getElementById('dash-module-count').textContent = modules.length;
+    document.getElementById('dash-content-count').textContent = count;
+  } catch (e) {}
+}
+
+// 加载内容模块列表
+async function loadContentModules() {
+  try {
+    const data = await sbRequest('/cms_content?select=*');
+    allContent = transformContent(data);
+    renderModuleList();
+  } catch (e) {
+    showToast('加载内容失败: ' + e.message, 'error');
+  }
+}
+
+// 渲染模块列表
+function renderModuleList() {
+  const list = document.getElementById('module-list');
+  const userPerms = currentUser.permissions || [];
+  const canEdit = (mod) => currentUser.role === 'admin' || userPerms.some(p => p.module === mod && p.can_edit === true);
+
+  list.innerHTML = Object.entries(MODULES).map(([key, mod]) => {
+    const hasPerm = canEdit(key);
+    const hasData = allContent[key];
+    return `
+      <button onclick="selectModule('${key}')" 
+        class="w-full text-left p-3 rounded-xl transition ${currentModule === key ? 'bg-emerald-100 border-emerald-300 border' : 'bg-white hover:bg-gray-50 border border-gray-100'} ${!hasPerm ? 'opacity-50 cursor-not-allowed' : ''}"
+        ${!hasPerm ? 'disabled' : ''}>
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">${mod.icon}</span>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-gray-900 text-sm">${mod.name}</div>
+            <div class="text-gray-400 text-xs truncate">${mod.desc}</div>
+          </div>
+          ${!hasPerm ? '<span class="text-xs text-red-400">无权限</span>' : ''}
+        </div>
+      </button>
+    `;
+  }).join('');
+}
+
+// 选择模块
+function selectModule(module) {
+  if (!allContent[module]) return;
+  currentModule = module;
+  editingValues = {};
+  renderModuleList();
+  renderEditor(module);
+}
+
+// 渲染编辑器
+function renderEditor(module) {
+  const data = allContent[module];
+  const modInfo = MODULES[module];
+  document.getElementById('editor-title').textContent = `${modInfo.icon} ${modInfo.name} - 编辑内容`;
+
+  const fields = document.getElementById('editor-fields');
+  fields.innerHTML = Object.entries(data).map(([key, field]) => {
+    const inputId = `field-${key}`;
+    editingValues[key] = field.value;
+
+    let inputHtml = '';
+    if (field.type === 'textarea') {
+      inputHtml = `<textarea id="${inputId}" rows="4" 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition resize-none"
+        placeholder="${field.placeholder || ''}" 
+        oninput="handleInput('${key}', this.value, ${field.max_length || 0})">${field.value || ''}</textarea>`;
+    } else if (field.type === 'number') {
+      inputHtml = `<input type="number" id="${inputId}" value="${field.value || ''}" 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+        placeholder="${field.placeholder || ''}" 
+        oninput="handleInput('${key}', this.value, 0)">`;
+    } else if (field.type === 'image') {
+      inputHtml = `
+        <input type="url" id="${inputId}" value="${field.value || ''}" 
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition mb-3"
+          placeholder="请输入图片 URL（支持 jpg/png/gif/webp/svg）" 
+          oninput="handleImageInput('${key}', this.value)">
+        <div class="preview-box" id="preview-${key}">
+          ${field.value ? `<img src="${field.value}" onerror="this.parentElement.innerHTML='<p class=\'text-gray-400\'>图片加载失败</p>'">` : '<p class="text-gray-400">输入图片 URL 后预览</p>'}
+        </div>
+        <p class="text-xs text-gray-400 mt-2">💡 提示：建议使用 .jpg/.png 格式，图片宽度建议 1200px 以上，文件大小不超过 2MB</p>
+      `;
+    } else {
+      inputHtml = `<input type="text" id="${inputId}" value="${field.value || ''}" 
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+        placeholder="${field.placeholder || ''}" 
+        oninput="handleInput('${key}', this.value, ${field.max_length || 0})">`;
+    }
+
+    const maxLen = field.max_length || 0;
+    const currentLen = (field.value || '').length;
+    const countClass = maxLen > 0 && currentLen > maxLen * 0.9 ? (currentLen > maxLen ? 'danger' : 'warning') : '';
+
+    return `
+      <div class="field-group">
+        <div class="flex items-center justify-between mb-2">
+          <label class="font-medium text-gray-700 text-sm">${field.label || key}</label>
+          ${maxLen > 0 ? `<span class="char-count ${countClass}" id="count-${key}">${currentLen}/${maxLen}</span>` : ''}
+        </div>
+        ${inputHtml}
+        ${field.type === 'text' && maxLen > 0 ? `<p class="text-xs text-gray-400 mt-1">建议不超过 ${maxLen} 个字符</p>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// 处理输入
+function handleInput(key, value, maxLen) {
+  editingValues[key] = value;
+  if (maxLen > 0) {
+    const countEl = document.getElementById(`count-${key}`);
+    if (countEl) {
+      countEl.textContent = `${value.length}/${maxLen}`;
+      countEl.className = 'char-count ' + (value.length > maxLen ? 'danger' : (value.length > maxLen * 0.9 ? 'warning' : ''));
+    }
+  }
+}
+
+// 处理图片输入
+function handleImageInput(key, value) {
+  editingValues[key] = value;
+  const preview = document.getElementById(`preview-${key}`);
+  if (value && (value.endsWith('.jpg') || value.endsWith('.jpeg') || value.endsWith('.png') || value.endsWith('.gif') || value.endsWith('.webp') || value.endsWith('.svg'))) {
+    preview.innerHTML = `<img src="${value}" onerror="this.parentElement.innerHTML='<p class=\'text-red-400\'>图片加载失败，请检查 URL</p>'">`;
+  } else if (value) {
+    preview.innerHTML = '<p class="text-amber-500">⚠️ URL 格式可能不正确，建议以 .jpg/.png/.gif/.webp/.svg 结尾</p>';
+  } else {
+    preview.innerHTML = '<p class="text-gray-400">输入图片 URL 后预览</p>';
+  }
+}
+
+// 保存模块
+async function saveModule() {
+  if (!currentModule) return;
+
+  const btn = document.getElementById('save-btn');
+  document.getElementById('save-btn-text').classList.add('hidden');
+  document.getElementById('save-btn-loading').classList.remove('hidden');
+
+  try {
+    for (const [key, value] of Object.entries(editingValues)) {
+      await sbRequest(`/cms_content?module=eq.${currentModule}&key=eq.${key}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ 
+          value, 
+          updated_at: new Date().toISOString(),
+          updated_by: currentUser ? currentUser.id : null
+        })
+      });
+    }
+    showToast('保存成功！', 'success');
+    loadContentModules();
+  } catch (e) {
+    showToast('保存失败: ' + e.message, 'error');
+  } finally {
+    document.getElementById('save-btn-text').classList.remove('hidden');
+    document.getElementById('save-btn-loading').classList.add('hidden');
+  }
+}
+
+// 预览
+function previewChanges() {
+  const panel = document.getElementById('preview-panel');
+  const iframe = document.getElementById('preview-iframe');
+  panel.classList.remove('hidden');
+
+  const params = new URLSearchParams();
+  params.set('preview', '1');
+  for (const [key, value] of Object.entries(editingValues)) {
+    params.set(`${currentModule}_${key}`, value);
+  }
+
+  iframe.src = `${FRONTEND_URL}/index.html?${params.toString()}`;
+  showToast('预览已加载', 'info');
+}
+
+// 用户管理
+async function loadUsers() {
+  try {
+    const data = await sbRequest('/cms_users?select=id,username,role,created_at&order=id');
+    const tbody = document.getElementById('users-table-body');
+    tbody.innerHTML = data.map(u => `
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-3 text-gray-900">${u.id}</td>
+        <td class="px-4 py-3 font-medium text-gray-900">${u.username}</td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-1 rounded-full text-xs font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+            ${u.role === 'admin' ? '管理员' : '编辑'}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-gray-500">${new Date(u.created_at).toLocaleString('zh-CN')}</td>
+        <td class="px-4 py-3 text-right">
+          ${u.id !== currentUser.id ? `
+            <button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-red-700 text-sm font-medium">删除</button>
+          ` : '<span class="text-gray-400 text-sm">当前账号</span>'}
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showToast('加载用户失败: ' + e.message, 'error');
+  }
+}
+
+// 添加用户
+function showAddUserModal() {
+  document.getElementById('add-user-modal').classList.remove('hidden');
+  document.getElementById('add-user-modal').classList.add('flex');
+}
+
+function hideAddUserModal() {
+  document.getElementById('add-user-modal').classList.add('hidden');
+  document.getElementById('add-user-modal').classList.remove('flex');
+  document.getElementById('add-user-form').reset();
+}
+
+document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('new-username').value;
+  const password = document.getElementById('new-password').value;
+  const role = document.getElementById('new-role').value;
+
+  if (password.length < 6) {
+    showToast('密码至少6位', 'error');
+    return;
+  }
+
+  try {
+    const { salt, hash } = await hashPassword(password);
+    const hashStr = `${salt}:${hash}`;
+
+    const users = await sbRequest('/cms_users', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({ username, password_hash: hashStr, role })
+    });
+
+    const userId = users[0].id;
+
+    if (role === 'editor') {
+      const modules = ['hero', 'parks', 'projects', 'shows', 'tickets', 'guide', 'footer'];
+      for (const m of modules) {
+        await sbRequest('/cms_permissions', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: userId, module: m, can_edit: false })
+        });
+      }
+    }
+
+    showToast('用户添加成功', 'success');
+    hideAddUserModal();
+    loadUsers();
+  } catch (e) {
+    showToast('添加失败: ' + e.message, 'error');
+  }
+});
+
+// 删除用户
+async function deleteUser(id) {
+  if (!confirm('确定要删除该用户吗？')) return;
+  try {
+    await sbRequest(`/cms_permissions?user_id=eq.${id}`, { method: 'DELETE' });
+    await sbRequest(`/cms_users?id=eq.${id}`, { method: 'DELETE' });
+    showToast('删除成功', 'success');
+    loadUsers();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+// 权限管理
+async function loadPermissions() {
+  try {
+    const users = await sbRequest('/cms_users?role=eq.editor&select=id,username');
+    const perms = await sbRequest('/cms_permissions?select=user_id,module,can_edit');
+
+    const modules = ['hero', 'parks', 'projects', 'shows', 'tickets', 'guide'];
+
+    const tbody = document.getElementById('permissions-table-body');
+    tbody.innerHTML = users.map(u => {
+      const userPerms = perms.filter(p => p.user_id === u.id);
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium text-gray-900">${u.username}</td>
+          ${modules.map(m => {
+            const hasPerm = userPerms.some(p => p.module === m && p.can_edit === true);
+            return `
+              <td class="px-4 py-3 text-center">
+                <div class="permission-toggle ${hasPerm ? 'active' : ''}" 
+                  onclick="togglePermission(${u.id}, '${m}', ${!hasPerm})"></div>
+              </td>
+            `;
+          }).join('')}
+        </tr>
+      `;
+    }).join('');
+  } catch (e) {
+    showToast('加载权限失败: ' + e.message, 'error');
+  }
+}
+
+// 切换权限
+async function togglePermission(userId, module, canEdit) {
+  try {
+    const existing = await sbRequest(`/cms_permissions?user_id=eq.${userId}&module=eq.${module}&select=*`);
+
+    if (existing && existing.length > 0) {
+      await sbRequest(`/cms_permissions?user_id=eq.${userId}&module=eq.${module}`, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ can_edit: canEdit })
+      });
+    } else {
+      await sbRequest('/cms_permissions', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, module, can_edit: canEdit })
+      });
+    }
+
+    showToast(canEdit ? '权限已授予' : '权限已撤销', 'success');
+    loadPermissions();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+// Toast 通知
+function showToast(message, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+</script>
+</body>
+</html>
