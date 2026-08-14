@@ -4,65 +4,245 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>苏州乐园 - 森林娱乐王国</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
-* { font-family: 'Noto Sans SC', sans-serif; }
-.hero-bg { background: linear-gradient(135deg, #0f766e 0%, #065f46 50%, #064e3b 100%); }
-.glass-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); }
-.gradient-text { background: linear-gradient(135deg, #34d399, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.float-animation { animation: float 3s ease-in-out infinite; }
-@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-.slide-in { opacity: 0; transform: translateY(30px); transition: all 0.6s ease-out; }
-.slide-in.visible { opacity: 1; transform: translateY(0); }
-.park-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
-.nav-link { position: relative; }
-.nav-link::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #34d399; transition: width 0.3s; }
-.nav-link:hover::after { width: 100%; }
-.ticket-card { transition: all 0.3s ease; }
-.ticket-card:hover { transform: scale(1.03); border-color: #10b981; }
-.star-twinkle { animation: twinkle 2s ease-in-out infinite; }
-@keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-.btn-glow:hover { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
-.loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+  :root{
+    --green:#0f8a5f; --green-dark:#0b6b4a; --green-light:#e8f7f0;
+    --gold:#f5b73d; --ink:#1f2937; --ink-soft:#4b5563; --bg:#ffffff;
+    --radius:16px; --shadow:0 8px 30px rgba(15,138,95,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7}
+  a{text-decoration:none;color:inherit}
+  .container{max-width:1100px;margin:0 auto;padding:0 20px}
+  /* ===== 导航 ===== */
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 0;transition:.3s;background:transparent}
+  nav.scrolled{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);box-shadow:0 2px 20px rgba(0,0,0,.08)}
+  nav .container{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-size:22px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px}
+  nav.scrolled .logo{color:var(--green-dark)}
+  .logo .icon{font-size:26px}
+  .nav-links{display:flex;gap:26px;font-size:15px;color:rgba(255,255,255,.92)}
+  nav.scrolled .nav-links{color:var(--ink)}
+  .nav-links a:hover{opacity:.75}
+  @media(max-width:720px){.nav-links{display:none}}
+  /* ===== Hero ===== */
+  .hero{background:linear-gradient(135deg,#0b6b4a 0%,#0f8a5f 45%,#12a06f 100%);color:#fff;padding:160px 0 100px;position:relative;overflow:hidden;text-align:center}
+  .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(255,255,255,.15),transparent 45%),radial-gradient(ellipse at 80% 70%,rgba(245,183,61,.18),transparent 40%)}
+  .hero h1{font-size:clamp(40px,7vw,68px);font-weight:900;letter-spacing:2px;position:relative}
+  .hero .subtitle{font-size:clamp(18px,3vw,26px);font-weight:600;margin-top:12px;opacity:.95;position:relative}
+  .hero .desc{max-width:640px;margin:22px auto 0;opacity:.88;font-size:16px;position:relative}
+  .hero .cta{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative}
+  .btn{padding:14px 34px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;border:none;transition:.25s}
+  .btn-primary{background:var(--gold);color:#5b3d00}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(245,183,61,.4)}
+  .btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+  .btn-ghost:hover{background:rgba(255,255,255,.25)}
+  .stats{display:flex;gap:40px;justify-content:center;margin-top:56px;flex-wrap:wrap;position:relative}
+  .stat{text-align:center}
+  .stat b{display:block;font-size:34px;font-weight:900}
+  .stat span{font-size:14px;opacity:.85}
+  /* ===== 通用区块 ===== */
+  section{padding:90px 0}
+  .sec-head{text-align:center;margin-bottom:52px}
+  .sec-head .tag{display:inline-block;background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:700;padding:6px 16px;border-radius:50px;margin-bottom:14px}
+  .sec-head h2{font-size:clamp(28px,4vw,40px);font-weight:900}
+  .sec-head p{color:var(--ink-soft);margin-top:10px;font-size:15px}
+  /* ===== Parks ===== */
+  .parks{background:linear-gradient(180deg,#f6fbf8,#fff)}
+  .park-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+  .park-card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);transition:.25s;border:1px solid #e6f3ec}
+  .park-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(15,138,95,.18)}
+  .park-card .emoji{font-size:38px}
+  .park-card h3{margin:14px 0 8px;font-size:20px;font-weight:800}
+  .park-card p{color:var(--ink-soft);font-size:14.5px}
+  /* ===== Projects ===== */
+  .project-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+  .proj-card{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:#fff;border:1px solid #eef2f0;transition:.25s}
+  .proj-card:hover{transform:translateY(-6px)}
+  .proj-banner{height:130px;display:flex;align-items:center;justify-content:center;font-size:54px;background:linear-gradient(135deg,#e8f7f0,#d3efe2)}
+  .proj-body{padding:20px 24px 24px}
+  .proj-tag{font-size:12px;font-weight:700;color:var(--green-dark);background:var(--green-light);padding:3px 12px;border-radius:50px}
+  .proj-body h3{margin:10px 0 6px;font-size:18px;font-weight:800}
+  .proj-body p{color:var(--ink-soft);font-size:14px}
+  /* ===== Shows ===== */
+  .shows{background:linear-gradient(135deg,#121a2e,#1b2b4b);color:#fff}
+  .shows .sec-head .tag{background:rgba(255,255,255,.12);color:#ffd97a}
+  .shows .sec-head p{color:rgba(255,255,255,.7)}
+  .show-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+  .show-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:30px}
+  .show-card h3{font-size:20px;margin-bottom:8px;color:#ffd97a}
+  .show-card p{color:rgba(255,255,255,.82);font-size:14.5px}
+  .show-time{display:inline-block;margin-top:14px;font-size:13px;font-weight:700;background:rgba(255,255,255,.12);padding:5px 14px;border-radius:50px}
+  /* ===== Tickets ===== */
+  .ticket-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;align-items:stretch}
+  .ticket-card{border-radius:var(--radius);padding:34px 28px;background:#fff;box-shadow:var(--shadow);border:1px solid #eef2f0;text-align:center;position:relative;transition:.25s}
+  .ticket-card:hover{transform:translateY(-6px)}
+  .ticket-card.featured{border:2px solid var(--green);background:linear-gradient(180deg,#f2fbf7,#fff)}
+  .ticket-card .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:4px 18px;border-radius:50px}
+  .ticket-card h3{font-size:17px;font-weight:800}
+  .price{font-size:40px;font-weight:900;color:var(--green-dark);margin:12px 0 4px}
+  .price small{font-size:16px;font-weight:700;color:var(--ink-soft)}
+  .ticket-card .desc{color:var(--ink-soft);font-size:13.5px;margin-bottom:16px}
+  .ticket-card ul{list-style:none;text-align:left;font-size:13.5px;color:var(--ink-soft);margin-bottom:20px}
+  .ticket-card li{padding:4px 0}
+  .ticket-card li::before{content:"✓ ";color:var(--green);font-weight:800}
+  .ticket-note{margin-top:26px;text-align:center;font-size:13.5px;color:var(--ink-soft)}
+  .ticket-note b{color:var(--green-dark)}
+  /* ===== Guide ===== */
+  .guide{background:var(--green-light)}
+  .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+  .guide-item{background:#fff;border-radius:var(--radius);padding:22px;font-size:14px;color:var(--ink-soft)}
+  .guide-item b{display:block;color:var(--green-dark);margin-bottom:6px;font-size:15px}
+  .tips{margin-top:26px;background:#fff;border-radius:var(--radius);padding:26px;font-size:14.5px;color:var(--ink-soft);box-shadow:var(--shadow)}
+  /* ===== Footer ===== */
+  footer{background:#0c3b2e;color:rgba(255,255,255,.75);padding:44px 0 30px;text-align:center;font-size:14px}
+  footer .copy{font-size:15px;font-weight:600;color:#fff}
+  footer .addr{margin-top:8px;font-size:13px;opacity:.8}
+  footer .disc{margin-top:14px;font-size:12px;opacity:.6}
+  /* ===== 加载提示 ===== */
+  #loading{position:fixed;top:0;left:0;right:0;background:var(--gold);color:#5b3d00;text-align:center;font-size:13px;padding:4px;z-index:999;display:none}
 </style>
+</head>
+<body>
+<div id="loading">正在同步在线内容…</div>
+
+<nav id="nav">
+  <div class="container">
+    <div class="logo"><span class="icon">🌲</span>苏州乐园</div>
+    <div class="nav-links">
+      <a href="#parks">园区</a><a href="#projects">项目</a><a href="#shows">演出</a><a href="#tickets">门票</a><a href="#guide">攻略</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <h1 id="hero-title">苏州乐园</h1>
+    <div class="subtitle" id="hero-subtitle">森林娱乐王国</div>
+    <p class="desc" id="hero-desc">森林世界 · 森林水世界 · 糖果世界 · 外野商业</p>
+    <div class="cta">
+      <button class="btn btn-primary" id="cta-primary">立即购票</button>
+      <button class="btn btn-ghost" id="cta-secondary">探索园区</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>30+</b><span>游乐项目</span></div>
+      <div class="stat"><b>4</b><span>主题园区</span></div>
+      <div class="stat"><b>20+</b><span>主题演艺</span></div>
+      <div class="stat"><b>290+</b><span>全球节点</span></div>
+    </div>
+  </div>
+</header>
+
+<section class="parks" id="parks">
+  <div class="container">
+    <div class="sec-head">
+      <span class="tag">OUR PARKS</span>
+      <h2>三大园区 · 一MALL商业</h2>
+      <p>苏州乐园以"三园一MALL"全域矩阵，协同打造全时段、全年龄、全链条城市微度假目的地</p>
+    </div>
+    <div class="park-grid" id="parks-grid"></div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="container">
+    <div class="sec-head">
+      <span class="tag">ATTRACTIONS</span>
+      <h2>热门游乐项目</h2>
+      <p>从惊险刺激到温馨浪漫，总有一款适合你</p>
+    </div>
+    <div class="project-grid" id="projects-grid"></div>
+  </div>
+</section>
+
+<section class="shows" id="shows">
+  <div class="container">
+    <div class="sec-head">
+      <span class="tag">SHOWS &amp; EVENTS</span>
+      <h2>精彩演出 · 日夜狂欢</h2>
+      <p>20+场主题演艺，从白天到夜晚，快乐不停歇</p>
+    </div>
+    <div class="show-grid" id="shows-grid"></div>
+  </div>
+</section>
+
+<section id="tickets">
+  <div class="container">
+    <div class="sec-head">
+      <span class="tag">TICKETS</span>
+      <h2>门票预订</h2>
+      <p>提前购票，畅玩无忧</p>
+    </div>
+    <div class="ticket-grid" id="tickets-grid"></div>
+    <div class="ticket-note" id="ticket-note">
+      免票政策：身高未达1.2米（含）的儿童免费入园，1名购票成人仅限携带1名免票儿童<br>
+      营业时间：周一至周五 09:15-17:15 | 周六至周日/节假日 09:15-22:00
+    </div>
+  </div>
+</section>
+
+<section class="guide" id="guide">
+  <div class="container">
+    <div class="sec-head">
+      <span class="tag">GUIDE</span>
+      <h2>游玩攻略</h2>
+      <p>交通指南 &amp; 贴心提示</p>
+    </div>
+    <div class="guide-grid" id="guide-grid"></div>
+    <div class="tips" id="guide-tips"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="copy" id="footer-copy">苏州乐园 · 本页面为个人学习测试用，非官方网站</div>
+    <div class="addr">📍 苏州市高新区大阳山国家森林公园东南侧</div>
+    <div class="disc" id="footer-disc">数据来源于公开网络信息，仅供参考，请以官方公布为准</div>
+  </div>
+</footer>
+
 <script>
+/* ============================================================
+ * 配置区（部署后只需改这一行）
+ * ============================================================ */
+var API_BASE = 'https://cms-296899-9-1468483089.sh.run.tcloudbase.com';
 
-// ============================================
-// Supabase 配置 - 修改为你的项目信息
-// ============================================
-const SUPABASE_URL = 'https://ictdptkcnxejofaaijye.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljdGRwdGtjbnhlam9mYWFpanllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2Njg2NTUsImV4cCI6MjEwMjI0NDY1NX0.M5eOAuXJwH1A7wWh5ge8EEGFhTok1aDvycYNoG26fh4';
-
-// 默认内容（API 不可用时显示）
-const DEFAULT_CONTENT = {
+/* 默认内容（API 未就绪或失败时使用，保证页面永远完整显示） */
+var DEFAULTS = {
   hero: {
-    title: { value: '苏州乐园' },
-    subtitle: { value: '森林娱乐王国' },
+    title: { value: '苏州乐园' }, subtitle: { value: '森林娱乐王国' },
     description: { value: '森林世界 · 森林水世界 · 糖果世界 · 外野商业' },
-    cta_primary: { value: '立即购票' },
-    cta_secondary: { value: '探索园区' }
+    cta_primary: { value: '立即购票' }, cta_secondary: { value: '探索园区' }
   },
   parks: {
-    forest_title: { value: '森林世界' },
-    forest_desc: { value: '6大特色区域，30+游乐项目，冲上云霄过山车、雪域双雄跳楼机、旋转木马等，日夜双景体验。' },
-    water_title: { value: '森林水世界' },
-    water_desc: { value: '四大清凉主题区，十三大明星水项目。WaterPop造浪音乐季，白天休闲度假，夜间潮玩蹦迪。' },
-    candy_title: { value: '糖果世界' },
-    candy_desc: { value: '1.2万㎡全室内恒温空间，20余项亲子项目。姜饼人故事会、科学实验秀、泡泡秀等全新演出。' },
-    mall_title: { value: 'Wide Wild 外野' },
-    mall_desc: { value: '特色餐饮、潮流零售与休闲体验业态，补齐吃住行游购娱消费闭环，延展游客驻留时间。' }
+    forest_title: { value: '森林世界' }, forest_desc: { value: '6大特色区域，30+游乐项目，冲上云霄过山车、雪域双雄跳楼机、旋转木马等，日夜双景体验。' },
+    water_title: { value: '森林水世界' }, water_desc: { value: '四大清凉主题区，十三大明星水项目。WaterPop造浪音乐季，白天休闲度假，夜间潮玩蹦迪。' },
+    candy_title: { value: '糖果世界' }, candy_desc: { value: '1.2万㎡全室内恒温空间，20余项亲子项目。姜饼人故事会、科学实验秀、泡泡秀等全新演出。' },
+    mall_title: { value: 'Wide Wild 外野' }, mall_desc: { value: '特色餐饮、潮流零售与休闲体验业态，补齐吃住行游购娱消费闭环，延展游客驻留时间。' }
+  },
+  projects: {
+    p1_name: { value: '冲上云霄' }, p1_desc: { value: '过山车尖叫划破夜空，体验极速飞驰的快感，感受风驰电掣的刺激。' },
+    p2_name: { value: '雪域双雄' }, p2_desc: { value: '跳楼机急速下坠，惊呼声此起彼伏，挑战你的胆量极限。' },
+    p3_name: { value: '旋转木马' }, p3_desc: { value: '灯光在夜色中格外温柔，古典与浪漫相间的心动体验。' },
+    p4_name: { value: '造浪池' }, p4_desc: { value: '每半小时人造海浪，浪高0.3m至1.2m，六种浪群轮番来袭。' },
+    p5_name: { value: '暴风谷' }, p5_desc: { value: '急速丛林水滑道，穿越雨林异域景观，体验速度与激情。' },
+    p6_name: { value: '科学实验秀' }, p6_desc: { value: '全新创意演出，孩子们围坐一圈听得入神，小脸上写满好奇。' }
+  },
+  shows: {
+    day_title: { value: '日间精彩' }, day_desc: { value: '09:15 - 17:15 全天，森林萌宝大巡游、NPC互动演出、明星音乐会' },
+    night_title: { value: '夜间狂欢' }, night_desc: { value: '17:15 - 22:00（周末/节假日），星愿狂想之夜、幻光花车巡游、无人机烟花秀' }
   },
   tickets: {
-    adult_price: { value: '218' },
-    adult_desc: { value: '身高1.5米（含）以上' },
-    discount_price: { value: '118' },
-    discount_desc: { value: '老人 / 儿童（1.2-1.5米）' },
-    night_price: { value: '69' },
-    night_desc: { value: '限时特惠 · 提前一天购买' }
+    adult_price: { value: '218' }, adult_desc: { value: '身高1.5米（含）以上' },
+    discount_price: { value: '118' }, discount_desc: { value: '老人 / 儿童（1.2-1.5米）' },
+    night_price: { value: '69' }, night_desc: { value: '限时特惠 · 提前一天购买' }
+  },
+  guide: {
+    metro: { value: '乘坐地铁至苏州乐园站，出站后换乘免费接驳车直达园区' },
+    bus: { value: '乘坐42路、51路、313路、353路至苏州乐园首末站下车' },
+    drive: { value: '导航至"苏州乐园森林世界"，市内走长江路即可到达，园区设有大型停车场' },
+    shuttle: { value: '往返地铁站和酒店，班次加密，具体时刻表请关注官方小程序' },
+    tips: { value: '天气注意：当日气温低于5℃时，部分室外设备会延时开放，请关注天气预报。' }
   },
   footer: {
     copyright: { value: '苏州乐园 · 本页面为个人学习测试用，非官方网站' },
@@ -70,548 +250,117 @@ const DEFAULT_CONTENT = {
   }
 };
 
-let cmsContent = null;
-
-// Supabase 请求封装
-async function sbRequest(path) {
-  const url = `${SUPABASE_URL}/rest/v1${path}`;
-  const res = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`
-    }
-  });
-  if (!res.ok) return null;
-  return res.json();
+/* ============================================================
+ * 数据加载与渲染（保守 ES5 写法，兼容所有浏览器）
+ * ============================================================ */
+var CMS = {};
+function mergeDefaults() {
+  var d = DEFAULTS;
+  for (var m in d) { if (!CMS[m]) CMS[m] = {}; }
 }
-
-// 将 Supabase 数组格式转换为对象格式
-function transformContent(data) {
-  const result = {};
-  data.forEach(row => {
-    if (!result[row.module]) result[row.module] = {};
-    result[row.module][row.key] = { value: row.value };
-  });
-  return result;
-}
-
-// 获取内容（支持预览模式）
-async function loadContent() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const isPreview = urlParams.get('preview') === '1';
-
-  if (isPreview) {
-    cmsContent = {};
-    for (const [key, value] of urlParams.entries()) {
-      if (key.includes('_')) {
-        const [module, field] = key.split('_');
-        if (!cmsContent[module]) cmsContent[module] = {};
-        cmsContent[module][field] = { value };
-      }
-    }
-    renderPage();
-    return;
-  }
-
+function val(module, key, fallback) {
   try {
-    const data = await sbRequest('/cms_content?select=*');
-    if (data) {
-      cmsContent = transformContent(data);
-      renderPage();
-      return;
+    if (CMS[module] && CMS[module][key] && CMS[module][key].value !== undefined && CMS[module][key].value !== '') {
+      return CMS[module][key].value;
     }
-  } catch (e) {
-    console.log('API 不可用，使用默认内容');
-  }
-
-  cmsContent = DEFAULT_CONTENT;
-  renderPage();
+  } catch (e) {}
+  return fallback;
 }
 
-// 获取字段值
-function getValue(module, key, defaultVal = '') {
-  if (cmsContent && cmsContent[module] && cmsContent[module][key]) {
-    return cmsContent[module][key].value || defaultVal;
+function loadContent() {
+  /* 预览模式：优先读取管理后台写入的实时编辑数据 */
+  var isPreview = window.location.search.indexOf('preview=1') >= 0;
+  if (isPreview) {
+    try {
+      var cached = localStorage.getItem('cms_live_preview');
+      if (cached) { CMS = JSON.parse(cached); renderAll(); return; }
+    } catch (e) {}
   }
-  if (DEFAULT_CONTENT[module] && DEFAULT_CONTENT[module][key]) {
-    return DEFAULT_CONTENT[module][key].value || defaultVal;
-  }
-  return defaultVal;
+  if (!API_BASE || API_BASE.indexOf('你的环境ID') >= 0) { renderAll(); return; }
+  var tip = document.getElementById('loading');
+  tip.style.display = 'block';
+  fetch(API_BASE + '/api/content')
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (json && json.success) CMS = json.data;
+      tip.style.display = 'none';
+      renderAll();
+    })
+    .catch(function () { tip.style.display = 'none'; renderAll(); });
 }
 
-// 渲染页面
-function renderPage() {
-  const heroTitle = document.getElementById('hero-title');
-  if (heroTitle) heroTitle.textContent = getValue('hero', 'title', '苏州乐园');
+function renderAll() {
+  mergeDefaults();
+  /* hero */
+  document.getElementById('hero-title').textContent = val('hero', 'title', '苏州乐园');
+  document.getElementById('hero-subtitle').textContent = val('hero', 'subtitle', '森林娱乐王国');
+  document.getElementById('hero-desc').textContent = val('hero', 'description', '');
+  document.getElementById('cta-primary').textContent = val('hero', 'cta_primary', '立即购票');
+  document.getElementById('cta-secondary').textContent = val('hero', 'cta_secondary', '探索园区');
 
-  const heroSubtitle = document.getElementById('hero-subtitle');
-  if (heroSubtitle) heroSubtitle.textContent = getValue('hero', 'subtitle', '森林娱乐王国');
-
-  const heroDesc = document.getElementById('hero-desc');
-  if (heroDesc) heroDesc.textContent = getValue('hero', 'description', '森林世界 · 森林水世界 · 糖果世界 · 外野商业');
-
-  const ctaPrimary = document.getElementById('cta-primary');
-  if (ctaPrimary) ctaPrimary.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>${getValue('hero', 'cta_primary', '立即购票')}`;
-
-  const ctaSecondary = document.getElementById('cta-secondary');
-  if (ctaSecondary) ctaSecondary.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${getValue('hero', 'cta_secondary', '探索园区')}`;
-
-  const parkFields = [
-    ['forest', 'forest_title', 'forest_desc'],
-    ['water', 'water_title', 'water_desc'],
-    ['candy', 'candy_title', 'candy_desc'],
-    ['mall', 'mall_title', 'mall_desc']
+  /* parks */
+  var parks = [
+    { t: val('parks','forest_title','森林世界'), d: val('parks','forest_desc',''), e: '🌲' },
+    { t: val('parks','water_title','森林水世界'), d: val('parks','water_desc',''), e: '🌊' },
+    { t: val('parks','candy_title','糖果世界'), d: val('parks','candy_desc',''), e: '🍬' },
+    { t: val('parks','mall_title','Wide Wild 外野'), d: val('parks','mall_desc',''), e: '🛍️' }
   ];
+  document.getElementById('parks-grid').innerHTML = parks.map(function (p) {
+    return '<div class="park-card"><div class="emoji">' + p.e + '</div><h3>' + p.t + '</h3><p>' + p.d + '</p></div>';
+  }).join('');
 
-  parkFields.forEach(([key, titleKey, descKey]) => {
-    const titleEl = document.getElementById(`park-${key}-title`);
-    if (titleEl) titleEl.textContent = getValue('parks', titleKey, '');
-    const descEl = document.getElementById(`park-${key}-desc`);
-    if (descEl) descEl.textContent = getValue('parks', descKey, '');
-  });
+  /* projects */
+  var tags = ['惊险·森林世界','刺激·森林世界','浪漫·森林世界','清凉·水世界','探险·水世界','亲子·糖果世界'];
+  var emojis = ['🎢','🪂','🎠','🏄','🌪️','🧪'];
+  var items = '';
+  for (var i = 1; i <= 6; i++) {
+    items += '<div class="proj-card"><div class="proj-banner">' + emojis[i-1] + '</div>' +
+      '<div class="proj-body"><span class="proj-tag">' + tags[i-1] + '</span>' +
+      '<h3>' + val('projects', 'p' + i + '_name', '项目' + i) + '</h3>' +
+      '<p>' + val('projects', 'p' + i + '_desc', '') + '</p></div></div>';
+  }
+  document.getElementById('projects-grid').innerHTML = items;
 
-  const ticketPrices = [
-    ['adult', 'adult_price', 'adult_desc'],
-    ['discount', 'discount_price', 'discount_desc'],
-    ['night', 'night_price', 'night_desc']
+  /* shows */
+  document.getElementById('shows-grid').innerHTML =
+    '<div class="show-card"><h3>☀️ ' + val('shows','day_title','日间精彩') + '</h3><p>' + val('shows','day_desc','') + '</p><span class="show-time">09:15 - 17:15 · 全天</span></div>' +
+    '<div class="show-card"><h3>🌙 ' + val('shows','night_title','夜间狂欢') + '</h3><p>' + val('shows','night_desc','') + '</p><span class="show-time">17:15 - 22:00 · 周末/节假日</span></div>';
+
+  /* tickets */
+  var t = [
+    { name: '成人票', price: val('tickets','adult_price','218'), desc: val('tickets','adult_desc',''), feat: true, badge: '推荐' },
+    { name: '优惠票', price: val('tickets','discount_price','118'), desc: val('tickets','discount_desc',''), feat: false, badge: '' },
+    { name: '夜场票', price: val('tickets','night_price','69'), desc: val('tickets','night_desc',''), feat: false, badge: '' }
   ];
+  document.getElementById('tickets-grid').innerHTML = t.map(function (x) {
+    var ul = (x.feat ? '<ul><li>当日有效，限入园1次</li><li>30+游乐项目一票畅玩</li><li>演艺免费观看</li></ul>'
+      : '<ul><li>需持有效证件入园</li><li>30+游乐项目一票畅玩</li><li>演艺免费观看</li></ul>');
+    var badge = x.badge ? '<span class="badge">' + x.badge + '</span>' : '';
+    return '<div class="ticket-card' + (x.feat ? ' featured' : '') + '">' + badge +
+      '<h3>' + x.name + '</h3><div class="price"><small>¥</small>' + x.price + '</div>' +
+      '<p class="desc">' + x.desc + '</p>' + ul +
+      '<button class="btn btn-primary" onclick="alert(\'学习测试站点：购票功能演示\')">立即预订</button></div>';
+  }).join('');
 
-  ticketPrices.forEach(([key, priceKey, descKey]) => {
-    const priceEl = document.getElementById(`ticket-${key}-price`);
-    if (priceEl) priceEl.textContent = getValue('tickets', priceKey, '0');
-    const descEl = document.getElementById(`ticket-${key}-desc`);
-    if (descEl) descEl.textContent = getValue('tickets', descKey, '');
-  });
+  /* guide */
+  document.getElementById('guide-grid').innerHTML =
+    '<div class="guide-item"><b>🚇 地铁出行</b>' + val('guide','metro','') + '</div>' +
+    '<div class="guide-item"><b>🚌 公交出行</b>' + val('guide','bus','') + '</div>' +
+    '<div class="guide-item"><b>🚗 自驾出行</b>' + val('guide','drive','') + '</div>' +
+    '<div class="guide-item"><b>🚐 免费接驳车</b>' + val('guide','shuttle','') + '</div>';
+  document.getElementById('guide-tips').innerHTML = '<b>💡 贴心提示：</b>' + val('guide','tips','');
 
-  const copyrightEl = document.getElementById('footer-copyright');
-  if (copyrightEl) copyrightEl.textContent = getValue('footer', 'copyright', '');
-  const disclaimerEl = document.getElementById('footer-disclaimer');
-  if (disclaimerEl) disclaimerEl.textContent = getValue('footer', 'disclaimer', '');
+  /* footer */
+  document.getElementById('footer-copy').textContent = val('footer','copyright','');
+  document.getElementById('footer-disc').textContent = val('footer','disclaimer','');
 }
 
-// 页面加载完成后获取内容
+/* 导航滚动变色 */
+window.addEventListener('scroll', function () {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+});
+
 document.addEventListener('DOMContentLoaded', loadContent);
-
-</script>
-</head>
-<body class="bg-gray-50 text-gray-800 overflow-x-hidden">
-
-<!-- 顶部导航 -->
-<nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
-      <div class="flex items-center space-x-2">
-        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-        </div>
-        <span class="text-xl font-bold text-white tracking-wide">苏州乐园</span>
-      </div>
-      <div class="hidden md:flex items-center space-x-8">
-        <a href="#parks" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">三大园区</a>
-        <a href="#projects" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">热门项目</a>
-        <a href="#shows" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">精彩演出</a>
-        <a href="#tickets" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">门票预订</a>
-        <a href="#guide" class="nav-link text-white/90 hover:text-white text-sm font-medium transition">游玩攻略</a>
-      </div>
-      <button onclick="toggleMobileMenu()" class="md:hidden text-white p-2">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
-    </div>
-  </div>
-  <div id="mobile-menu" class="hidden md:hidden bg-emerald-900/95 backdrop-blur-lg">
-    <div class="px-4 py-4 space-y-3">
-      <a href="#parks" class="block text-white/90 hover:text-white py-2">三大园区</a>
-      <a href="#projects" class="block text-white/90 hover:text-white py-2">热门项目</a>
-      <a href="#shows" class="block text-white/90 hover:text-white py-2">精彩演出</a>
-      <a href="#tickets" class="block text-white/90 hover:text-white py-2">门票预订</a>
-      <a href="#guide" class="block text-white/90 hover:text-white py-2">游玩攻略</a>
-    </div>
-  </div>
-</nav>
-
-<!-- Hero 区域 -->
-<section class="hero-bg relative min-h-screen flex items-center justify-center overflow-hidden">
-  <div class="absolute inset-0 overflow-hidden">
-    <div class="absolute top-20 left-10 w-72 h-72 bg-emerald-400/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-20 right-10 w-96 h-96 bg-teal-400/15 rounded-full blur-3xl"></div>
-    <div class="absolute top-32 left-1/4 w-2 h-2 bg-white rounded-full star-twinkle"></div>
-    <div class="absolute top-48 right-1/3 w-1.5 h-1.5 bg-emerald-300 rounded-full star-twinkle" style="animation-delay:0.5s"></div>
-  </div>
-  <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
-    <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2 mb-6 border border-white/20">
-      <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-      <span class="text-emerald-200 text-sm font-medium">2026 暑期 WaterPop 造浪音乐季火热进行中</span>
-    </div>
-    <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
-      <span id="hero-title">苏州乐园</span><br>
-      <span class="gradient-text" id="hero-subtitle">森林娱乐王国</span>
-    </h1>
-    <p class="text-lg md:text-xl text-emerald-100/80 mb-10 max-w-2xl mx-auto leading-relaxed" id="hero-desc">
-      森林世界 · 森林水世界 · 糖果世界 · 外野商业
-    </p>
-    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-      <a href="#tickets" id="cta-primary" class="btn-glow bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:from-emerald-400 hover:to-teal-500 transition-all duration-300 flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-        立即购票
-      </a>
-      <a href="#parks" id="cta-secondary" class="glass-card text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/15 transition-all duration-300 flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        探索园区
-      </a>
-    </div>
-    <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-      <div class="glass-card rounded-2xl p-4 text-center"><div class="text-3xl font-black text-emerald-300">30+</div><div class="text-emerald-200/70 text-sm mt-1">游乐项目</div></div>
-      <div class="glass-card rounded-2xl p-4 text-center"><div class="text-3xl font-black text-emerald-300">4</div><div class="text-emerald-200/70 text-sm mt-1">主题园区</div></div>
-      <div class="glass-card rounded-2xl p-4 text-center"><div class="text-3xl font-black text-emerald-300">20+</div><div class="text-emerald-200/70 text-sm mt-1">主题演艺</div></div>
-      <div class="glass-card rounded-2xl p-4 text-center"><div class="text-3xl font-black text-emerald-300">290+</div><div class="text-emerald-200/70 text-sm mt-1">全球节点</div></div>
-    </div>
-  </div>
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 float-animation">
-    <svg class="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
-  </div>
-</section>
-
-<!-- 三大园区 -->
-<section id="parks" class="py-20 md:py-28 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16 slide-in">
-      <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Our Parks</span>
-      <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">三大园区 · 一MALL商业</h2>
-      <p class="text-gray-500 mt-4 max-w-2xl mx-auto">苏州乐园以"三园一MALL"全域矩阵，协同打造全时段、全年龄、全链条城市微度假目的地</p>
-    </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="park-card bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-6 border border-emerald-100 transition-all duration-300 cursor-pointer slide-in">
-        <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-4">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2" id="park-forest-title">森林世界</h3>
-        <p class="text-gray-600 text-sm leading-relaxed mb-4" id="park-forest-desc">6大特色区域，30+游乐项目，冲上云霄过山车、雪域双雄跳楼机、旋转木马等，日夜双景体验。</p>
-      </div>
-      <div class="park-card bg-gradient-to-br from-cyan-50 to-blue-50 rounded-3xl p-6 border border-cyan-100 transition-all duration-300 cursor-pointer slide-in" style="transition-delay:0.1s">
-        <div class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2" id="park-water-title">森林水世界</h3>
-        <p class="text-gray-600 text-sm leading-relaxed mb-4" id="park-water-desc">四大清凉主题区，十三大明星水项目。WaterPop造浪音乐季，白天休闲度假，夜间潮玩蹦迪。</p>
-      </div>
-      <div class="park-card bg-gradient-to-br from-pink-50 to-rose-50 rounded-3xl p-6 border border-pink-100 transition-all duration-300 cursor-pointer slide-in" style="transition-delay:0.2s">
-        <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center mb-4">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2" id="park-candy-title">糖果世界</h3>
-        <p class="text-gray-600 text-sm leading-relaxed mb-4" id="park-candy-desc">1.2万㎡全室内恒温空间，20余项亲子项目。姜饼人故事会、科学实验秀、泡泡秀等全新演出。</p>
-      </div>
-      <div class="park-card bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 border border-amber-100 transition-all duration-300 cursor-pointer slide-in" style="transition-delay:0.3s">
-        <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2" id="park-mall-title">Wide Wild 外野</h3>
-        <p class="text-gray-600 text-sm leading-relaxed mb-4" id="park-mall-desc">特色餐饮、潮流零售与休闲体验业态，补齐吃住行游购娱消费闭环，延展游客驻留时间。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 热门项目 -->
-<section id="projects" class="py-20 md:py-28 bg-gray-900 relative overflow-hidden">
-  <div class="absolute inset-0">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
-  </div>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="text-center mb-16 slide-in">
-      <span class="text-emerald-400 font-semibold text-sm tracking-widest uppercase">Attractions</span>
-      <h2 class="text-4xl md:text-5xl font-black text-white mt-2">热门游乐项目</h2>
-      <p class="text-gray-400 mt-4 max-w-2xl mx-auto">从惊险刺激到温馨浪漫，总有一款适合你</p>
-    </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in">
-        <div class="h-48 bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center">
-          <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center gap-2 mb-2"><span class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">惊险</span><span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">森林世界</span></div>
-          <h3 class="text-xl font-bold text-white mb-2">冲上云霄</h3>
-          <p class="text-gray-400 text-sm">过山车尖叫划破夜空，体验极速飞驰的快感，感受风驰电掣的刺激。</p>
-        </div>
-      </div>
-      <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.1s">
-        <div class="h-48 bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center">
-          <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center gap-2 mb-2"><span class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">刺激</span><span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">森林世界</span></div>
-          <h3 class="text-xl font-bold text-white mb-2">雪域双雄</h3>
-          <p class="text-gray-400 text-sm">跳楼机急速下坠，惊呼声此起彼伏，挑战你的胆量极限。</p>
-        </div>
-      </div>
-      <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.2s">
-        <div class="h-48 bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
-          <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center gap-2 mb-2"><span class="bg-pink-500/20 text-pink-400 text-xs font-bold px-2 py-1 rounded-full">浪漫</span><span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">森林世界</span></div>
-          <h3 class="text-xl font-bold text-white mb-2">旋转木马</h3>
-          <p class="text-gray-400 text-sm">灯光在夜色中格外温柔，古典与浪漫相间的心动体验。</p>
-        </div>
-      </div>
-      <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in">
-        <div class="h-48 bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-          <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center gap-2 mb-2"><span class="bg-cyan-500/20 text-cyan-400 text-xs font-bold px-2 py-1 rounded-full">清凉</span><span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">水世界</span></div>
-          <h3 class="text-xl font-bold text-white mb-2">造浪池</h3>
-          <p class="text-gray-400 text-sm">每半小时人造海浪，浪高0.3m至1.2m，六种浪群轮番来袭。</p>
-        </div>
-      </div>
-      <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.1s">
-        <div class="h-48 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-          <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center gap-2 mb-2"><span class="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-1 rounded-full">探险</span><span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">水世界</span></div>
-          <h3 class="text-xl font-bold text-white mb-2">暴风谷</h3>
-          <p class="text-gray-400 text-sm">急速丛林水滑道，穿越雨林异域景观，体验速度与激情。</p>
-        </div>
-      </div>
-      <div class="group relative bg-gray-800 rounded-3xl overflow-hidden slide-in" style="transition-delay:0.2s">
-        <div class="h-48 bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-          <svg class="w-20 h-20 text-white/30 group-hover:scale-110 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        </div>
-        <div class="p-6">
-          <div class="flex items-center gap-2 mb-2"><span class="bg-violet-500/20 text-violet-400 text-xs font-bold px-2 py-1 rounded-full">亲子</span><span class="bg-pink-500/20 text-pink-400 text-xs font-bold px-2 py-1 rounded-full">糖果世界</span></div>
-          <h3 class="text-xl font-bold text-white mb-2">科学实验秀</h3>
-          <p class="text-gray-400 text-sm">全新创意演出，孩子们围坐一圈听得入神，小脸上写满好奇。</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 精彩演出 -->
-<section id="shows" class="py-20 md:py-28 bg-gradient-to-b from-emerald-50 to-teal-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16 slide-in">
-      <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Shows & Events</span>
-      <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">精彩演出 · 日夜狂欢</h2>
-      <p class="text-gray-500 mt-4 max-w-2xl mx-auto">20+场主题演艺，从白天到夜晚，快乐不停歇</p>
-    </div>
-    <div class="grid md:grid-cols-2 gap-8">
-      <div class="bg-white rounded-3xl p-8 shadow-lg slide-in">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg>
-          </div>
-          <div><h3 class="text-xl font-bold text-gray-900">日间精彩</h3><p class="text-gray-500 text-sm">09:15 - 17:15</p></div>
-        </div>
-        <div class="space-y-4">
-          <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl"><div class="w-16 text-center"><span class="text-emerald-600 font-bold text-sm">全天</span></div><div><h4 class="font-bold text-gray-900">森林萌宝大巡游</h4><p class="text-gray-500 text-sm">可爱萌宠互动，甜蜜萌宝全天陪伴</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl"><div class="w-16 text-center"><span class="text-emerald-600 font-bold text-sm">多场次</span></div><div><h4 class="font-bold text-gray-900">NPC互动演出</h4><p class="text-gray-500 text-sm">高颜值心愿互动，20+场即兴街头表演</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl"><div class="w-16 text-center"><span class="text-emerald-600 font-bold text-sm">周末</span></div><div><h4 class="font-bold text-gray-900">明星音乐会</h4><p class="text-gray-500 text-sm">飞儿乐团、周慧敏、袁一琦等轮番登场</p></div></div>
-        </div>
-      </div>
-      <div class="bg-gray-900 rounded-3xl p-8 shadow-lg slide-in" style="transition-delay:0.1s">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
-            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-          </div>
-          <div><h3 class="text-xl font-bold text-white">夜间狂欢</h3><p class="text-gray-400 text-sm">17:15 - 22:00（周末/节假日）</p></div>
-        </div>
-        <div class="space-y-4">
-          <div class="flex items-start gap-4 p-4 bg-gray-800 rounded-2xl"><div class="w-16 text-center"><span class="text-indigo-400 font-bold text-sm">nightly</span></div><div><h4 class="font-bold text-white">星愿狂想之夜</h4><p class="text-gray-400 text-sm">融合震撼打击、奇幻光影、时尚走秀</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-gray-800 rounded-2xl"><div class="w-16 text-center"><span class="text-indigo-400 font-bold text-sm">nightly</span></div><div><h4 class="font-bold text-white">幻光花车巡游</h4><p class="text-gray-400 text-sm">夜间花车巡游队伍穿行园区，流光溢彩</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-gray-800 rounded-2xl"><div class="w-16 text-center"><span class="text-indigo-400 font-bold text-sm">周末</span></div><div><h4 class="font-bold text-white">无人机烟花秀</h4><p class="text-gray-400 text-sm">无人机化身新年倒数灯牌，万人共同点亮</p></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 门票预订 -->
-<section id="tickets" class="py-20 md:py-28 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16 slide-in">
-      <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Tickets</span>
-      <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">门票预订</h2>
-      <p class="text-gray-500 mt-4 max-w-2xl mx-auto">提前购票，畅玩无忧</p>
-    </div>
-    <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-      <div class="ticket-card bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 border-2 border-gray-200 text-center slide-in">
-        <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">成人票</h3>
-        <div class="text-4xl font-black text-emerald-600 mb-2"><span class="text-2xl">¥</span><span id="ticket-adult-price">218</span></div>
-        <p class="text-gray-500 text-sm mb-6" id="ticket-adult-desc">身高1.5米（含）以上</p>
-        <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>当日有效，限入园1次</li>
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>30+游乐项目一票畅玩</li>
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>演艺免费观看</li>
-        </ul>
-        <button onclick="alert('演示页面：购票功能需接入真实支付系统')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">立即预订</button>
-      </div>
-      <div class="ticket-card bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 border-2 border-emerald-400 text-center relative slide-in" style="transition-delay:0.1s">
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">推荐</div>
-        <div class="w-16 h-16 bg-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">优惠票</h3>
-        <div class="text-4xl font-black text-emerald-600 mb-2"><span class="text-2xl">¥</span><span id="ticket-discount-price">118</span></div>
-        <p class="text-gray-500 text-sm mb-6" id="ticket-discount-desc">老人 / 儿童（1.2-1.5米）</p>
-        <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>需持有效证件入园</li>
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>30+游乐项目一票畅玩</li>
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>演艺免费观看</li>
-        </ul>
-        <button onclick="alert('演示页面：购票功能需接入真实支付系统')" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 rounded-xl font-bold hover:from-emerald-600 hover:to-teal-700 transition shadow-lg">立即预订</button>
-      </div>
-      <div class="ticket-card bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 border-2 border-indigo-200 text-center slide-in" style="transition-delay:0.2s">
-        <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">夜场票</h3>
-        <div class="text-4xl font-black text-indigo-600 mb-2"><span class="text-2xl">¥</span><span id="ticket-night-price">69</span><span class="text-lg text-gray-400 line-through ml-2">¥129</span></div>
-        <p class="text-gray-500 text-sm mb-6" id="ticket-night-desc">限时特惠 · 提前一天购买</p>
-        <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>16:00后入园</li>
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>含夜间大秀 & 烟花秀</li>
-          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>周末明星演出</li>
-        </ul>
-        <button onclick="alert('演示页面：购票功能需接入真实支付系统')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">立即预订</button>
-      </div>
-    </div>
-    <div class="mt-8 text-center text-gray-500 text-sm slide-in">
-      <p>免票政策：身高未达1.2米（含）的儿童免费入园，1名购票成人仅限携带1名免票儿童</p>
-      <p class="mt-1">营业时间：周一至周五 09:15-17:15 | 周六至周日/节假日 09:15-22:00</p>
-    </div>
-  </div>
-</section>
-
-<!-- 游玩攻略 -->
-<section id="guide" class="py-20 md:py-28 bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16 slide-in">
-      <span class="text-emerald-600 font-semibold text-sm tracking-widest uppercase">Guide</span>
-      <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-2">游玩攻略</h2>
-      <p class="text-gray-500 mt-4 max-w-2xl mx-auto">交通指南 & 贴心提示</p>
-    </div>
-    <div class="grid lg:grid-cols-2 gap-8">
-      <div class="bg-white rounded-3xl p-8 shadow-lg slide-in">
-        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          交通指南
-        </h3>
-        <div class="space-y-4">
-          <div class="flex items-start gap-4 p-4 bg-emerald-50 rounded-2xl"><div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div><div><h4 class="font-bold text-gray-900">地铁出行</h4><p class="text-gray-600 text-sm">乘坐地铁至苏州乐园站，出站后换乘免费接驳车直达园区</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl"><div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div><div><h4 class="font-bold text-gray-900">公交出行</h4><p class="text-gray-600 text-sm">乘坐42路、51路、313路、353路至苏州乐园首末站下车</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl"><div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div><div><h4 class="font-bold text-gray-900">自驾出行</h4><p class="text-gray-600 text-sm">导航至"苏州乐园森林世界"，市内走长江路即可到达，园区设有大型停车场</p></div></div>
-          <div class="flex items-start gap-4 p-4 bg-purple-50 rounded-2xl"><div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div><div><h4 class="font-bold text-gray-900">免费接驳车</h4><p class="text-gray-600 text-sm">往返地铁站和酒店，班次加密，具体时刻表请关注官方小程序</p></div></div>
-        </div>
-      </div>
-      <div class="bg-white rounded-3xl p-8 shadow-lg slide-in" style="transition-delay:0.1s">
-        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          贴心提示
-        </h3>
-        <div class="space-y-4">
-          <div class="flex items-start gap-3"><div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-emerald-600 text-xs font-bold">1</span></div><p class="text-gray-600 text-sm"><strong class="text-gray-900">天气注意：</strong>当日气温低于5℃时，部分室外设备会延时开放，请关注天气预报。</p></div>
-          <div class="flex items-start gap-3"><div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-emerald-600 text-xs font-bold">2</span></div><p class="text-gray-600 text-sm"><strong class="text-gray-900">防暑降温：</strong>夏季游玩建议携带遮阳帽、防晒霜。园区提供降温喷雾、免费饮水、遮阳凉棚。</p></div>
-          <div class="flex items-start gap-3"><div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-emerald-600 text-xs font-bold">3</span></div><p class="text-gray-600 text-sm"><strong class="text-gray-900">冻原王国：</strong>近7000㎡零下冰雪馆，是夏日避暑天堂，记得带上厚外套哦！</p></div>
-          <div class="flex items-start gap-3"><div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-emerald-600 text-xs font-bold">4</span></div><p class="text-gray-600 text-sm"><strong class="text-gray-900">烟花秀占位：</strong>火秀提前20分钟占位，第一排体验翻倍！</p></div>
-          <div class="flex items-start gap-3"><div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-emerald-600 text-xs font-bold">5</span></div><p class="text-gray-600 text-sm"><strong class="text-gray-900">灵活退改：</strong>符合条件可退票或7日内免费重游，出行更安心。</p></div>
-          <div class="flex items-start gap-3"><div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-emerald-600 text-xs font-bold">6</span></div><p class="text-gray-600 text-sm"><strong class="text-gray-900">实时信息：</strong>建议通过"苏州乐园"微信小程序获取实时演出更新和项目开放情况。</p></div>
-        </div>
-        <div class="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
-          <p class="text-emerald-800 text-sm font-medium text-center">📍 地址：苏州市高新区大阳山国家森林公园东南侧</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 页脚 -->
-<footer class="bg-gray-900 text-white py-12">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid md:grid-cols-4 gap-8 mb-8">
-      <div>
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-          </div>
-          <span class="text-lg font-bold">苏州乐园</span>
-        </div>
-        <p class="text-gray-400 text-sm">森林娱乐王国，三园一MALL，打造全时段、全年龄、全链条城市微度假目的地。</p>
-      </div>
-      <div>
-        <h4 class="font-bold mb-4">快速链接</h4>
-        <ul class="space-y-2 text-gray-400 text-sm">
-          <li><a href="#parks" class="hover:text-emerald-400 transition">三大园区</a></li>
-          <li><a href="#projects" class="hover:text-emerald-400 transition">热门项目</a></li>
-          <li><a href="#shows" class="hover:text-emerald-400 transition">精彩演出</a></li>
-          <li><a href="#tickets" class="hover:text-emerald-400 transition">门票预订</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold mb-4">帮助中心</h4>
-        <ul class="space-y-2 text-gray-400 text-sm">
-          <li><a href="#guide" class="hover:text-emerald-400 transition">交通指南</a></li>
-          <li><span class="hover:text-emerald-400 transition cursor-pointer">常见问题</span></li>
-          <li><span class="hover:text-emerald-400 transition cursor-pointer">游客须知</span></li>
-          <li><span class="hover:text-emerald-400 transition cursor-pointer">联系我们</span></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-bold mb-4">关注我们</h4>
-        <p class="text-gray-400 text-sm mb-4">关注"苏州乐园"微信公众号，获取最新活动资讯</p>
-        <div class="flex gap-3">
-          <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition cursor-pointer">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 00.167-.054l1.903-1.114a.864.864 0 01.717-.098 10.16 10.16 0 002.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348z"/></svg>
-          </div>
-          <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition cursor-pointer">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z"/></svg>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-      <p id="footer-copyright"> 苏州乐园 · 本页面为个人学习测试用，非官方网站</p>
-      <p class="mt-2" id="footer-disclaimer">数据来源于公开网络信息，仅供参考，请以官方公布为准</p>
-    </div>
-  </div>
-</footer>
-
-<script>
-// 导航栏滚动效果
-window.addEventListener('scroll', () => {
-  const navbar = document.getElementById('navbar');
-  if (window.scrollY > 50) {
-    navbar.classList.add('bg-emerald-900/95', 'backdrop-blur-lg', 'shadow-lg');
-    navbar.classList.remove('bg-transparent');
-  } else {
-    navbar.classList.remove('bg-emerald-900/95', 'backdrop-blur-lg', 'shadow-lg');
-    navbar.classList.add('bg-transparent');
-  }
-});
-
-function toggleMobileMenu() {
-  document.getElementById('mobile-menu').classList.toggle('hidden');
-}
-
-// 滚动动画
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
-}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-document.querySelectorAll('.slide-in').forEach(el => observer.observe(el));
-
-// 平滑滚动
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function(e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('mobile-menu').classList.add('hidden'); }
-  });
-});
 </script>
 </body>
 </html>

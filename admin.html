@@ -3,634 +3,545 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>苏州乐园 CMS</title>
+<title>苏州乐园 CMS 管理后台</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; }
-body { background: #f3f4f6; }
-.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #065f46, #047857); }
-.login-box { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
-.login-box h1 { text-align: center; margin-bottom: 8px; color: #111; font-size: 24px; }
-.login-box .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 24px; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 6px; }
-.form-group input { width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s; }
-.form-group input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-.btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-.btn:hover { opacity: 0.9; }
-.hint { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px; }
-.sidebar { width: 240px; background: #065f46; min-height: 100vh; position: fixed; left: 0; top: 0; color: white; }
-.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.sidebar-header h2 { font-size: 18px; }
-.sidebar-header p { font-size: 12px; color: #6ee7b7; margin-top: 4px; }
-.nav-item { display: block; padding: 12px 20px; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; transition: all 0.2s; border: none; background: none; width: 100%; text-align: left; cursor: pointer; }
-.nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
-.sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; }
-.main { margin-left: 240px; min-height: 100vh; }
-.header { background: white; border-bottom: 1px solid #e5e7eb; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-.header h1 { font-size: 20px; color: #111; }
-.content { padding: 24px; }
-.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.card-title { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 16px; }
-.module-list { width: 220px; flex-shrink: 0; }
-.module-btn { display: block; width: 100%; padding: 12px; margin-bottom: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; text-align: left; cursor: pointer; transition: all 0.2s; font-size: 14px; }
-.module-btn:hover { border-color: #10b981; background: #ecfdf5; }
-.module-btn.active { border-color: #10b981; background: #d1fae5; font-weight: 600; }
-.editor-area { flex: 1; }
-.field-group { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
-.field-group:focus-within { border-color: #10b981; }
-.field-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; display: flex; justify-content: space-between; }
-.field-label .count { font-size: 12px; color: #9ca3af; }
-.field-label .count.warn { color: #f59e0b; }
-.field-label .count.danger { color: #ef4444; }
-input[type="text"], input[type="number"], textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; }
-input[type="text"]:focus, input[type="number"]:focus, textarea:focus { border-color: #10b981; }
-textarea { resize: vertical; min-height: 80px; }
-.btn-sm { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
-.btn-primary { background: #10b981; color: white; }
-.btn-primary:hover { background: #059669; }
-.btn-secondary { background: #f3f4f6; color: #374151; margin-right: 8px; }
-.btn-secondary:hover { background: #e5e7eb; }
-.hidden { display: none !important; }
-.flex { display: flex; }
-.gap-4 { gap: 16px; }
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
-.text-center { text-align: center; }
-.text-gray { color: #6b7280; }
-.text-sm { font-size: 13px; }
-.text-red { color: #ef4444; }
-.text-green { color: #10b981; }
-.preview-box { background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 8px; padding: 16px; text-align: center; margin-top: 8px; }
-.preview-box img { max-width: 100%; max-height: 180px; border-radius: 4px; }
-.toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; font-weight: 500; z-index: 1000; transform: translateX(150%); transition: transform 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-.toast.show { transform: translateX(0); }
-.toast-success { background: #10b981; }
-.toast-error { background: #ef4444; }
-.toast-info { background: #3b82f6; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-th { background: #f9fafb; font-weight: 500; color: #374151; }
-.badge { padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
-.badge-purple { background: #f3e8ff; color: #7c3aed; }
-.badge-blue { background: #dbeafe; color: #2563eb; }
-.toggle { width: 40px; height: 22px; background: #e5e7eb; border-radius: 11px; position: relative; cursor: pointer; transition: background 0.3s; display: inline-block; }
-.toggle.active { background: #10b981; }
-.toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.toggle.active::after { transform: translateX(18px); }
-.export-panel { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 2px solid #10b981; border-radius: 12px; padding: 20px; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f7f6;color:#1f2937}
+  a{text-decoration:none;color:inherit}
+  .hidden{display:none!important}
+  /* 登录页 */
+  #login-view{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0b6b4a,#12a06f)}
+  .login-card{background:#fff;border-radius:20px;padding:44px 40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .login-card h1{font-size:24px;text-align:center;margin-bottom:6px}
+  .login-card .sub{text-align:center;color:#6b7280;font-size:13px;margin-bottom:26px}
+  .login-card label{display:block;font-size:13px;font-weight:600;color:#374151;margin:14px 0 6px}
+  .login-card input{width:100%;padding:11px 14px;border:1.5px solid #d1d5db;border-radius:10px;font-size:15px;outline:none}
+  .login-card input:focus{border-color:#0f8a5f}
+  .btn{display:inline-block;padding:11px 22px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+  .btn-primary{background:#0f8a5f;color:#fff;width:100%;margin-top:22px}
+  .btn-primary:hover{background:#0b6b4a}
+  .btn-ghost{background:#e5e7eb;color:#374151}
+  .btn-ghost:hover{background:#d1d5db}
+  .btn-warn{background:#ef4444;color:#fff}
+  .btn-small{padding:6px 14px;font-size:13px;border-radius:8px}
+  .db-check{width:100%;margin-top:12px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:10px;border-radius:10px;font-size:13px;display:none}
+  .db-check.bad{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+  .err{color:#dc2626;font-size:13px;margin-top:10px;display:none;text-align:center}
+  /* 后台布局 */
+  #app-view{display:flex;min-height:100vh}
+  .sidebar{width:220px;background:#0c3b2e;color:#fff;padding:24px 0;flex-shrink:0}
+  .sidebar .brand{font-size:18px;font-weight:800;padding:0 24px 20px;border-bottom:1px solid rgba(255,255,255,.12)}
+  .sidebar .brand small{display:block;font-size:11px;font-weight:400;color:rgba(255,255,255,.5);margin-top:4px}
+  .side-item{padding:12px 24px;cursor:pointer;font-size:14.5px;transition:.2s;display:flex;align-items:center;gap:10px}
+  .side-item:hover{background:rgba(255,255,255,.08)}
+  .side-item.active{background:#0f8a5f;font-weight:700}
+  .side-item .role-tag{margin-left:auto;font-size:10px;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px}
+  .main{flex:1;padding:30px 36px;min-width:0}
+  .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+  .page-head h2{font-size:22px}
+  .page-head .sub{color:#6b7280;font-size:13px;margin-top:4px}
+  .card{background:#fff;border-radius:14px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+  /* 仪表盘 */
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
+  .stat-card{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+  .stat-card b{font-size:30px;color:#0f8a5f;display:block}
+  .stat-card span{font-size:13px;color:#6b7280}
+  .quick{margin-top:24px}
+  .quick a{display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;padding:12px 16px;border-radius:10px;margin-bottom:10px;font-size:14px;font-weight:600}
+  /* 内容管理 */
+  .content-wrap{display:flex;gap:22px;align-items:flex-start}
+  .mod-list{width:200px;flex-shrink:0}
+  .mod-item{padding:12px 16px;background:#fff;border-radius:10px;margin-bottom:8px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+  .mod-item.active{background:#0f8a5f;color:#fff}
+  .mod-item .lock{font-size:11px;font-weight:400;color:#f59e0b;margin-left:6px}
+  .field-card{flex:1;min-width:0}
+  .field-row{margin-bottom:18px}
+  .field-row label{display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px}
+  .field-row .hint{font-size:12px;color:#9ca3af;margin-left:8px;font-weight:400}
+  .field-row input,.field-row textarea{width:100%;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14.5px;outline:none;font-family:inherit}
+  .field-row textarea{min-height:90px;resize:vertical}
+  .field-row input:focus,.field-row textarea:focus{border-color:#0f8a5f}
+  .counter{font-size:12px;margin-top:4px;color:#6b7280;text-align:right}
+  .counter.warn{color:#d97706}
+  .counter.over{color:#dc2626;font-weight:700}
+  .img-preview{margin-top:8px;display:none}
+  .img-preview img{max-height:110px;border-radius:8px;border:1px solid #e5e7eb}
+  .img-preview .bad{color:#dc2626;font-size:12px}
+  .save-bar{margin-top:22px;display:flex;gap:12px;align-items:center}
+  .save-msg{font-size:13px;color:#16a34a;display:none}
+  .save-msg.bad{color:#dc2626}
+  /* 用户管理 */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #eef2f0}
+  th{color:#6b7280;font-size:12.5px;font-weight:700}
+  .add-user{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .add-user input,.add-user select{padding:10px 14px;border:1.5px solid #d1d5db;border-radius:10px;font-size:14px;outline:none}
+  /* 权限矩阵 */
+  .perm-table{overflow-x:auto}
+  .perm-table table{min-width:640px}
+  .perm-table td,.perm-table th{text-align:center}
+  .perm-table td:first-child,.perm-table th:first-child{text-align:left}
+  .switch{position:relative;width:44px;height:24px;background:#d1d5db;border-radius:20px;display:inline-block;cursor:pointer;transition:.2s;vertical-align:middle}
+  .switch.on{background:#0f8a5f}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s}
+  .switch.on::after{left:23px}
+  /* 预览 */
+  #preview-frame{width:100%;height:calc(100vh - 180px);border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+  .preview-tip{font-size:13px;color:#6b7280;margin-bottom:10px}
+  /* 提示条 */
+  .toast{position:fixed;top:20px;right:20px;background:#0f8a5f;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;z-index:999}
+  @media(max-width:900px){.sidebar{width:64px}.side-item span{display:none}.content-wrap{flex-direction:column}.mod-list{width:100%;display:flex;flex-wrap:wrap;gap:8px}}
 </style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
-
-<!-- 登录页面 -->
-<div id="page-login" class="login-page">
-  <div class="login-box">
-    <h1>🎢 苏州乐园 CMS</h1>
-    <p class="subtitle">内容管理系统</p>
-    <form id="form-login" onsubmit="return doLogin(event)">
-      <div class="form-group">
-        <label>用户名</label>
-        <input type="text" id="inp-username" placeholder="请输入用户名" required>
-      </div>
-      <div class="form-group">
-        <label>密码</label>
-        <input type="password" id="inp-password" placeholder="请输入密码" required>
-      </div>
-      <button type="submit" class="btn">登 录</button>
+<!-- ======== 登录页 ======== -->
+<div id="login-view">
+  <div class="login-card">
+    <h1>🌲 苏州乐园 CMS</h1>
+    <div class="sub">管理后台 · 个人学习测试系统</div>
+    <form id="login-form" onsubmit="event.preventDefault(); return doLogin()">
+      <label>用户名</label>
+      <input id="login-user" type="text" autocomplete="username" placeholder="admin" required>
+      <label>密码</label>
+      <input id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+      <button type="submit" class="btn btn-primary">登 录</button>
+      <button type="button" class="btn btn-ghost db-check" id="db-check-btn" style="display:none" onclick="checkDb()">检查数据库状态</button>
+      <div class="db-check" id="db-check-result"></div>
+      <div class="err" id="login-err"></div>
     </form>
-    <p class="hint">默认账号: admin / admin123</p>
+    <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="checkDb()">🔌 检查数据库状态</button>
   </div>
 </div>
 
-<!-- 管理后台 -->
-<div id="page-admin" class="hidden">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>🌲 苏州乐园</h2>
-      <p>CMS 本地版</p>
-    </div>
-    <button class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard">📊 仪表盘</button>
-    <button class="nav-item" onclick="switchTab('content')" id="nav-content">✏️ 内容管理</button>
-    <button class="nav-item" onclick="switchTab('users')" id="nav-users">👥 用户管理</button>
-    <button class="nav-item" onclick="switchTab('permissions')" id="nav-permissions">🔐 权限管理</button>
-    <button class="nav-item" onclick="switchTab('export')" id="nav-export">📦 导出网站</button>
-    <div class="sidebar-footer">
-      <div id="user-info">Admin (管理员)</div>
-      <button onclick="doLogout()" style="background:none;border:none;color:#6ee7b7;cursor:pointer;font-size:13px;margin-top:4px;">退出登录</button>
-    </div>
-  </div>
+<!-- ======== 后台 ======== -->
+<div id="app-view" class="hidden">
+  <aside class="sidebar">
+    <div class="brand">🌲 苏州乐园 CMS<small>个人学习测试后台</small></div>
+    <div class="side-item active" data-view="dashboard" onclick="switchView('dashboard')">📊 <span>仪表盘</span></div>
+    <div class="side-item" data-view="content" onclick="switchView('content')">✏️ <span>内容管理</span></div>
+    <div class="side-item" data-view="users" onclick="switchView('users')">👥 <span>用户管理</span><span class="role-tag">admin</span></div>
+    <div class="side-item" data-view="perms" onclick="switchView('perms')">🔐 <span>权限管理</span><span class="role-tag">admin</span></div>
+    <div class="side-item" data-view="preview" onclick="switchView('preview')">👁️ <span>实时预览</span></div>
+    <div class="side-item" style="margin-top:30px" onclick="doLogout()">🚪 <span>退出登录</span></div>
+  </aside>
+
   <div class="main">
-    <div class="header">
-      <h1 id="header-title">仪表盘</h1>
-      <a href="https://ershisiyuanyang.github.io/suzhou-leyuan/index.html" target="_blank" style="color:#10b981;text-decoration:none;font-size:14px;font-weight:500;">🔗 查看网站</a>
+    <!-- 仪表盘 -->
+    <div id="view-dashboard">
+      <div class="page-head"><div><h2>仪表盘</h2><div class="sub" id="dash-sub"></div></div></div>
+      <div class="stat-row">
+        <div class="stat-card"><b id="stat-modules">-</b><span>内容模块</span></div>
+        <div class="stat-card"><b id="stat-fields">-</b><span>可编辑字段</span></div>
+        <div class="stat-card"><b id="stat-users">-</b><span>用户数</span></div>
+        <div class="stat-card"><b id="stat-role">-</b><span>我的角色</span></div>
+      </div>
+      <div class="card quick">
+        <h3 style="margin-bottom:14px">快速入口</h3>
+        <a href="#" onclick="switchView('content');return false">✏️ 去编辑网站内容</a>
+        <a href="#" onclick="switchView('preview');return false">👁️ 预览线上页面效果</a>
+      </div>
     </div>
-    <div class="content">
 
-      <!-- 仪表盘 -->
-      <div id="tab-dashboard">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
-          <div class="card">
-            <div style="font-size:32px;margin-bottom:8px;">📦</div>
-            <div style="font-size:28px;font-weight:700;color:#111;">7</div>
-            <div style="font-size:14px;color:#6b7280;">内容模块</div>
-          </div>
-          <div class="card">
-            <div style="font-size:32px;margin-bottom:8px;">📝</div>
-            <div style="font-size:28px;font-weight:700;color:#111;" id="stat-fields">19</div>
-            <div style="font-size:14px;color:#6b7280;">内容字段</div>
-          </div>
-          <div class="card">
-            <div style="font-size:32px;margin-bottom:8px;">💾</div>
-            <div style="font-size:28px;font-weight:700;color:#111;">Local</div>
-            <div style="font-size:14px;color:#6b7280;">本地存储</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">快速操作</div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-            <button onclick="switchTab('content')" class="btn-sm btn-primary" style="padding:16px;font-size:15px;">✏️ 编辑内容</button>
-            <button onclick="switchTab('export')" class="btn-sm btn-primary" style="padding:16px;font-size:15px;">📦 导出网站</button>
-          </div>
+    <!-- 内容管理 -->
+    <div id="view-content" class="hidden">
+      <div class="page-head"><div><h2>内容管理</h2><div class="sub">左侧选择模块，右侧在线编辑，实时字数/图片校验，保存后立即同步到网站</div></div></div>
+      <div class="content-wrap">
+        <div class="mod-list" id="mod-list"></div>
+        <div class="card field-card">
+          <div id="field-form"></div>
         </div>
       </div>
+    </div>
 
-      <!-- 内容管理 -->
-      <div id="tab-content" class="hidden">
-        <div class="flex gap-4">
-          <div class="module-list">
-            <div class="card-title">选择模块</div>
-            <button class="module-btn" onclick="selectModule('hero')" id="mod-hero">🏠 首页 Hero</button>
-            <button class="module-btn" onclick="selectModule('parks')" id="mod-parks">🎢 三大园区</button>
-            <button class="module-btn" onclick="selectModule('tickets')" id="mod-tickets">🎫 门票预订</button>
-            <button class="module-btn" onclick="selectModule('footer')" id="mod-footer">📝 页脚信息</button>
-          </div>
-          <div class="editor-area" id="editor-area">
-            <div class="card" style="text-align:center;color:#9ca3af;padding:60px 20px;">
-              <div style="font-size:48px;margin-bottom:16px;">👈</div>
-              <div>请从左侧选择一个模块开始编辑</div>
-            </div>
-          </div>
+    <!-- 用户管理 -->
+    <div id="view-users" class="hidden">
+      <div class="page-head"><div><h2>用户管理</h2><div class="sub">仅管理员可见 · 添加 / 删除账号</div></div></div>
+      <div class="card">
+        <table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="user-tbody"></tbody></table>
+        <div class="add-user">
+          <input id="nu-name" placeholder="新用户名" style="width:160px">
+          <input id="nu-pass" type="password" placeholder="密码（至少6位）" style="width:170px">
+          <select id="nu-role"><option value="editor">编辑 editor</option><option value="admin">管理员 admin</option></select>
+          <button class="btn btn-primary" style="width:auto;margin:0" onclick="addUser()">➕ 添加用户</button>
         </div>
       </div>
+    </div>
 
-      <!-- 用户管理 -->
-      <div id="tab-users" class="hidden">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <div class="card-title">用户列表</div>
-            <button onclick="showAddUser()" class="btn-sm btn-primary">➕ 添加用户</button>
-          </div>
-          <table>
-            <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>操作</th></tr></thead>
-            <tbody id="tbl-users"></tbody>
-          </table>
-        </div>
+    <!-- 权限管理 -->
+    <div id="view-perms" class="hidden">
+      <div class="page-head"><div><h2>权限管理</h2><div class="sub">仅管理员可见 · 为每个账号开关各模块的编辑权限（点击开关即时生效）</div></div></div>
+      <div class="card perm-table">
+        <table><thead id="perm-thead"></thead><tbody id="perm-tbody"></tbody></table>
       </div>
+    </div>
 
-      <!-- 权限管理 -->
-      <div id="tab-permissions" class="hidden">
-        <div class="card">
-          <div class="card-title">模块权限分配</div>
-          <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">点击开关即可授予/撤销编辑权限</p>
-          <table>
-            <thead><tr><th>用户</th><th>Hero</th><th>园区</th><th>门票</th><th>页脚</th></tr></thead>
-            <tbody id="tbl-perms"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 导出 -->
-      <div id="tab-export" class="hidden">
-        <div class="card">
-          <h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">📦 导出静态网站</h2>
-          <p style="color:#6b7280;margin-bottom:20px;">将当前编辑的内容生成一个完整的 HTML 文件，可以直接上传到 GitHub Pages。</p>
-          <div class="export-panel">
-            <h4 style="color:#065f46;font-weight:600;margin-bottom:12px;">导出说明</h4>
-            <ul style="color:#047857;font-size:14px;line-height:2;margin-bottom:20px;padding-left:20px;">
-              <li>导出的文件包含所有当前编辑的内容</li>
-              <li>无需后端，纯静态 HTML，任何平台都能托管</li>
-              <li>导出后如需再次修改，需要重新导出并上传</li>
-            </ul>
-            <button onclick="exportSite()" class="btn" style="max-width:300px;">🚀 生成并下载 index.html</button>
-          </div>
-        </div>
-      </div>
-
+    <!-- 预览 -->
+    <div id="view-preview" class="hidden">
+      <div class="page-head"><div><h2>实时预览</h2><div class="sub">预览线上展示页效果（已保存内容）</div></div></div>
+      <div class="preview-tip">💡 提示：在「内容管理」里编辑后点击「保存修改」，再回到这里点「刷新预览」即可看到最新效果。</div>
+      <button class="btn btn-primary" style="width:auto;margin:0 0 14px" onclick="refreshPreview()">🔄 刷新预览</button>
+      <iframe id="preview-frame" src="about:blank"></iframe>
     </div>
   </div>
 </div>
 
-<!-- 添加用户弹窗 -->
-<div id="modal-adduser" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;">
-  <div style="background:white;padding:24px;border-radius:12px;width:100%;max-width:400px;margin:20px;">
-    <h3 style="font-size:18px;font-weight:600;margin-bottom:16px;">添加新用户</h3>
-    <form onsubmit="return addUser(event)">
-      <div class="form-group"><label>用户名</label><input type="text" id="new-user-name" required></div>
-      <div class="form-group"><label>密码</label><input type="password" id="new-user-pass" required></div>
-      <div class="form-group"><label>角色</label>
-        <select id="new-user-role" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
-          <option value="editor">编辑</option>
-          <option value="admin">管理员</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button type="button" onclick="hideAddUser()" class="btn-sm btn-secondary" style="flex:1;">取消</button>
-        <button type="submit" class="btn-sm btn-primary" style="flex:1;">确认添加</button>
-      </div>
-    </form>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ===================== 数据层 =====================
-var DB = {
-  users: [{id:1, username:'admin', password:'admin123', role:'admin'}],
-  permissions: [
-    {user_id:1, module:'hero', can_edit:true},
-    {user_id:1, module:'parks', can_edit:true},
-    {user_id:1, module:'tickets', can_edit:true},
-    {user_id:1, module:'footer', can_edit:true}
-  ],
-  content: {
-    hero: {
-      title: {value:'苏州乐园', type:'text', label:'主标题', max:20},
-      subtitle: {value:'森林娱乐王国', type:'text', label:'副标题', max:20},
-      description: {value:'森林世界 · 森林水世界 · 糖果世界 · 外野商业', type:'textarea', label:'描述文字', max:200},
-      cta_primary: {value:'立即购票', type:'text', label:'主按钮', max:10},
-      cta_secondary: {value:'探索园区', type:'text', label:'次按钮', max:10}
-    },
-    parks: {
-      forest_title: {value:'森林世界', type:'text', label:'森林世界标题', max:20},
-      forest_desc: {value:'6大特色区域，30+游乐项目，冲上云霄过山车、雪域双雄跳楼机、旋转木马等，日夜双景体验。', type:'textarea', label:'森林世界描述', max:300},
-      water_title: {value:'森林水世界', type:'text', label:'水世界标题', max:20},
-      water_desc: {value:'四大清凉主题区，十三大明星水项目。WaterPop造浪音乐季，白天休闲度假，夜间潮玩蹦迪。', type:'textarea', label:'水世界描述', max:300},
-      candy_title: {value:'糖果世界', type:'text', label:'糖果世界标题', max:20},
-      candy_desc: {value:'1.2万㎡全室内恒温空间，20余项亲子项目。姜饼人故事会、科学实验秀、泡泡秀等全新演出。', type:'textarea', label:'糖果世界描述', max:300},
-      mall_title: {value:'Wide Wild 外野', type:'text', label:'外野标题', max:20},
-      mall_desc: {value:'特色餐饮、潮流零售与休闲体验业态，补齐吃住行游购娱消费闭环，延展游客驻留时间。', type:'textarea', label:'外野描述', max:300}
-    },
-    tickets: {
-      adult_price: {value:'218', type:'number', label:'成人票价格', max:10},
-      adult_desc: {value:'身高1.5米（含）以上', type:'text', label:'成人票说明', max:50},
-      discount_price: {value:'118', type:'number', label:'优惠票价格', max:10},
-      discount_desc: {value:'老人 / 儿童（1.2-1.5米）', type:'text', label:'优惠票说明', max:50},
-      night_price: {value:'69', type:'number', label:'夜场票价格', max:10},
-      night_desc: {value:'限时特惠 · 提前一天购买', type:'text', label:'夜场票说明', max:50}
-    },
-    footer: {
-      copyright: {value:'苏州乐园 · 本页面为个人学习测试用，非官方网站', type:'text', label:'版权信息', max:100},
-      disclaimer: {value:'数据来源于公开网络信息，仅供参考，请以官方公布为准', type:'text', label:'免责声明', max:100}
-    }
+/* ============================================================
+ * 配置区（部署后只需改这一行 + 下一行）
+ * ============================================================ */
+var API_BASE = 'https://cms-296899-9-1468483089.sh.run.tcloudbase.com';
+var FRONTEND_URL = 'https://ershisiyuanyang.github.io/suzhou-leyuan/index.html'; // 线上展示页地址
+
+var MODULES = [
+  { key: 'hero', name: '首页 Hero' },
+  { key: 'parks', name: '三大园区' },
+  { key: 'projects', name: '热门项目' },
+  { key: 'shows', name: '精彩演出' },
+  { key: 'tickets', name: '门票价格' },
+  { key: 'guide', name: '游玩攻略' },
+  { key: 'footer', name: '页脚信息' }
+];
+
+var TOKEN_KEY = 'sly_cms_token';
+var token = localStorage.getItem(TOKEN_KEY) || '';
+var myInfo = null;
+var contentData = null; // { module: { key: {value,type,label,max_length} } }
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg) {
+  var t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  setTimeout(function () { t.style.display = 'none'; }, 2200);
+}
+function api(method, path, body, needToken) {
+  var opt = { method: method, headers: {} };
+  if (body !== undefined) {
+    opt.headers['Content-Type'] = 'application/json';
+    opt.body = JSON.stringify(body);
   }
-};
-
-var currentUser = null;
-var currentModule = null;
-var editingValues = {};
-
-function loadDB() {
-  var saved = localStorage.getItem('cms_db');
-  if (saved) {
-    try { DB = JSON.parse(saved); } catch(e) {}
-  }
+  if (needToken && token) opt.headers['Authorization'] = 'Bearer ' + token;
+  return fetch(API_BASE + path, opt).then(function (r) { return r.json(); });
 }
 
-function saveDB() {
-  localStorage.setItem('cms_db', JSON.stringify(DB));
-}
-
-function loadSession() {
-  var saved = localStorage.getItem('cms_user');
-  if (saved) {
-    try {
-      currentUser = JSON.parse(saved);
-      showAdmin();
-    } catch(e) {}
-  }
-}
-
-// ===================== 登录 =====================
-function doLogin(e) {
-  e.preventDefault();
-  var username = document.getElementById('inp-username').value.trim();
-  var password = document.getElementById('inp-password').value;
-
-  var user = DB.users.find(function(u) { return u.username === username && u.password === password; });
-
-  if (user) {
-    var perms = DB.permissions.filter(function(p) { return p.user_id === user.id; });
-    currentUser = {id: user.id, username: user.username, role: user.role, permissions: perms};
-    localStorage.setItem('cms_user', JSON.stringify(currentUser));
-    showAdmin();
-    showToast('登录成功', 'success');
-  } else {
-    showToast('用户名或密码错误', 'error');
-  }
-  return false;
-}
-
-function doLogout() {
-  currentUser = null;
-  localStorage.removeItem('cms_user');
-  document.getElementById('page-login').classList.remove('hidden');
-  document.getElementById('page-admin').classList.add('hidden');
-  document.getElementById('form-login').reset();
-}
-
-function showAdmin() {
-  document.getElementById('page-login').classList.add('hidden');
-  document.getElementById('page-admin').classList.remove('hidden');
-  document.getElementById('user-info').textContent = currentUser.username + ' (' + (currentUser.role === 'admin' ? '管理员' : '编辑') + ')';
-
-  // 非管理员隐藏用户管理和权限管理
-  if (currentUser.role !== 'admin') {
-    document.getElementById('nav-users').style.display = 'none';
-    document.getElementById('nav-permissions').style.display = 'none';
-  }
-
-  updateStats();
-}
-
-// ===================== 标签切换 =====================
-function switchTab(tab) {
-  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
-  document.getElementById('nav-' + tab).classList.add('active');
-
-  ['dashboard','content','users','permissions','export'].forEach(function(t) {
-    document.getElementById('tab-' + t).classList.add('hidden');
-  });
-  document.getElementById('tab-' + tab).classList.remove('hidden');
-
-  var titles = {dashboard:'仪表盘', content:'内容管理', users:'用户管理', permissions:'权限管理', export:'导出网站'};
-  document.getElementById('header-title').textContent = titles[tab];
-
-  if (tab === 'users') renderUsers();
-  if (tab === 'permissions') renderPerms();
-}
-
-// ===================== 内容管理 =====================
-function selectModule(mod) {
-  currentModule = mod;
-  document.querySelectorAll('.module-btn').forEach(function(el) { el.classList.remove('active'); });
-  document.getElementById('mod-' + mod).classList.add('active');
-
-  var data = DB.content[mod];
-  var html = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><div class="card-title">编辑内容</div><div><button onclick="previewModule()" class="btn-sm btn-secondary">👁 预览</button><button onclick="saveModule()" class="btn-sm btn-primary">💾 保存</button></div></div>';
-
-  editingValues = {};
-  for (var key in data) {
-    var field = data[key];
-    editingValues[key] = field.value;
-    var inputId = 'f-' + key;
-    var maxLen = field.max || 0;
-    var currentLen = (field.value || '').length;
-    var countClass = '';
-    if (maxLen > 0 && currentLen > maxLen * 0.9) countClass = currentLen > maxLen ? 'danger' : 'warn';
-
-    html += '<div class="field-group">';
-    html += '<div class="field-label"><span>' + field.label + '</span>';
-    if (maxLen > 0) html += '<span class="count ' + countClass + '" id="c-' + key + '">' + currentLen + '/' + maxLen + '</span>';
-    html += '</div>';
-
-    if (field.type === 'textarea') {
-      html += '<textarea id="' + inputId + '" oninput="handleInput('' + key + '',this.value,' + maxLen + ')">' + (field.value || '') + '</textarea>';
-    } else if (field.type === 'number') {
-      html += '<input type="number" id="' + inputId + '" value="' + (field.value || '') + '" oninput="handleInput('' + key + '',this.value,0)">';
+/* ---------------- 登录 / 退出 ---------------- */
+function checkDb() {
+  var box = $('db-check-result');
+  box.className = 'db-check'; box.style.display = 'block';
+  box.textContent = '⏳ 正在连接数据库…';
+  api('GET', '/api/content').then(function (json) {
+    if (json && json.success) {
+      box.textContent = '✅ 数据库已连通，内容字段 ' + countFields(json.data) + ' 个';
     } else {
-      html += '<input type="text" id="' + inputId + '" value="' + (field.value || '') + '" oninput="handleInput('' + key + '',this.value,' + maxLen + ')">';
+      box.className = 'db-check bad';
+      box.textContent = '❌ 连接失败：' + (json && json.error ? json.error : '无法获取数据') + '。请检查 API_BASE 是否已改为你的云函数地址';
     }
-    html += '</div>';
-  }
-  html += '</div>';
-
-  document.getElementById('editor-area').innerHTML = html;
-}
-
-function handleInput(key, value, maxLen) {
-  editingValues[key] = value;
-  if (maxLen > 0) {
-    var el = document.getElementById('c-' + key);
-    if (el) {
-      el.textContent = value.length + '/' + maxLen;
-      el.className = 'count ' + (value.length > maxLen ? 'danger' : (value.length > maxLen * 0.9 ? 'warn' : ''));
-    }
-  }
-}
-
-function saveModule() {
-  if (!currentModule) return;
-  var data = DB.content[currentModule];
-  for (var key in editingValues) {
-    if (data[key]) data[key].value = editingValues[key];
-  }
-  saveDB();
-  showToast('保存成功！', 'success');
-  updateStats();
-}
-
-function previewModule() {
-  if (!currentModule) return;
-  var params = new URLSearchParams();
-  params.set('preview', '1');
-  for (var key in editingValues) {
-    params.set(currentModule + '_' + key, editingValues[key]);
-  }
-  var url = 'https://ershisiyuanyang.github.io/suzhou-leyuan/index.html?' + params.toString();
-  window.open(url, '_blank');
-}
-
-// ===================== 用户管理 =====================
-function renderUsers() {
-  var tbody = document.getElementById('tbl-users');
-  var html = '';
-  DB.users.forEach(function(u) {
-    html += '<tr><td>' + u.id + '</td><td>' + u.username + '</td><td><span class="badge ' + (u.role === 'admin' ? 'badge-purple' : 'badge-blue') + '">' + (u.role === 'admin' ? '管理员' : '编辑') + '</span></td><td>' + (u.id !== currentUser.id ? '<button onclick="delUser(' + u.id + ')" style="color:#ef4444;background:none;border:none;cursor:pointer;">删除</button>' : '<span style="color:#9ca3af;font-size:12px;">当前账号</span>') + '</td></tr>';
+  }).catch(function (e) {
+    box.className = 'db-check bad';
+    box.textContent = '❌ 网络错误：' + e.message + '。请确认云函数已部署且 API_BASE 正确';
   });
-  tbody.innerHTML = html;
 }
-
-function showAddUser() {
-  document.getElementById('modal-adduser').style.display = 'flex';
+function countFields(data) {
+  var n = 0; for (var m in data) { for (var k in data[m]) n++; } return n;
 }
-
-function hideAddUser() {
-  document.getElementById('modal-adduser').style.display = 'none';
-  document.getElementById('new-user-name').value = '';
-  document.getElementById('new-user-pass').value = '';
-}
-
-function addUser(e) {
-  e.preventDefault();
-  var name = document.getElementById('new-user-name').value.trim();
-  var pass = document.getElementById('new-user-pass').value;
-  var role = document.getElementById('new-user-role').value;
-
-  if (pass.length < 6) { showToast('密码至少6位', 'error'); return false; }
-  if (DB.users.find(function(u) { return u.username === name; })) { showToast('用户名已存在', 'error'); return false; }
-
-  var newId = Math.max.apply(null, DB.users.map(function(u) { return u.id; })) + 1;
-  DB.users.push({id: newId, username: name, password: pass, role: role});
-
-  if (role === 'editor') {
-    ['hero','parks','tickets','footer'].forEach(function(m) {
-      DB.permissions.push({user_id: newId, module: m, can_edit: false});
-    });
+function doLogin() {
+  try {
+  var u = $('login-user').value.trim();
+  var p = $('login-pass').value;
+  $('login-err').style.display = 'none';
+  api('POST', '/api/auth/login', { username: u, password: p }).then(function (json) {
+    if (json && json.success) {
+      token = json.token;
+      localStorage.setItem(TOKEN_KEY, token);
+      myInfo = json.user;
+      enterApp();
+    } else {
+      $('login-err').textContent = '❌ ' + (json && json.error ? json.error : '登录失败');
+      $('login-err').style.display = 'block';
+    }
+  }).catch(function () {
+    $('login-err').textContent = '❌ 网络错误：无法连接后台服务，请检查 API_BASE 配置';
+    $('login-err').style.display = 'block';
+  });
+  } catch (e) {
+    $('login-err').textContent = '❌ 页面脚本异常: ' + e.message;
+    $('login-err').style.display = 'block';
   }
-
-  saveDB();
-  hideAddUser();
-  renderUsers();
-  showToast('用户添加成功', 'success');
   return false;
 }
-
-function delUser(id) {
-  if (!confirm('确定删除该用户？')) return;
-  DB.users = DB.users.filter(function(u) { return u.id !== id; });
-  DB.permissions = DB.permissions.filter(function(p) { return p.user_id !== id; });
-  saveDB();
-  renderUsers();
-  showToast('删除成功', 'success');
+function doLogout() {
+  token = ''; localStorage.removeItem(TOKEN_KEY);
+  $('app-view').classList.add('hidden');
+  $('login-view').style.display = 'flex';
+  $('login-pass').value = '';
+}
+function enterApp() {
+  $('login-view').style.display = 'none';
+  $('app-view').classList.remove('hidden');
+  refreshMe();
+  switchView('dashboard');
+}
+function refreshMe() {
+  return api('GET', '/api/me', undefined, true).then(function (json) {
+    if (json && json.success) {
+      myInfo = json.user;
+      var isAdmin = myInfo.role === 'admin';
+      document.querySelectorAll('[data-view="users"],[data-view="perms"]').forEach(function (el) {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+      $('dash-sub').textContent = '当前登录：' + myInfo.username + '（' + (isAdmin ? '管理员' : '编辑') + '）';
+    } else if (!json || !json.success) {
+      doLogout();
+    }
+  }).catch(function () { doLogout(); });
 }
 
-// ===================== 权限管理 =====================
-function renderPerms() {
-  var editors = DB.users.filter(function(u) { return u.role === 'editor'; });
-  var tbody = document.getElementById('tbl-perms');
-  var modules = ['hero','parks','tickets','footer'];
-  var modNames = {hero:'Hero', parks:'园区', tickets:'门票', footer:'页脚'};
-
-  var html = '';
-  editors.forEach(function(u) {
-    html += '<tr><td>' + u.username + '</td>';
-    modules.forEach(function(m) {
-      var p = DB.permissions.find(function(x) { return x.user_id === u.id && x.module === m; });
-      var has = p ? p.can_edit : false;
-      html += '<td style="text-align:center;"><span class="toggle ' + (has ? 'active' : '') + '" onclick="togglePerm(' + u.id + ','' + m + '')"></span></td>';
-    });
-    html += '</tr>';
+/* ---------------- 视图切换 ---------------- */
+function switchView(name) {
+  document.querySelectorAll('.side-item').forEach(function (el) {
+    el.classList.toggle('active', el.getAttribute('data-view') === name);
   });
-
-  if (editors.length === 0) {
-    html = '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:40px;">暂无编辑用户，请先添加</td></tr>';
-  }
-  tbody.innerHTML = html;
+  ['dashboard','content','users','perms','preview'].forEach(function (v) {
+    $('view-' + v).classList.toggle('hidden', v !== name);
+  });
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'content') loadContentEdit();
+  if (name === 'users') loadUsers();
+  if (name === 'perms') loadPerms();
+  if (name === 'preview') refreshPreview();
 }
 
-function togglePerm(uid, mod) {
-  var p = DB.permissions.find(function(x) { return x.user_id === uid && x.module === mod; });
-  if (p) {
-    p.can_edit = !p.can_edit;
+/* ---------------- 仪表盘 ---------------- */
+function loadDashboard() {
+  api('GET', '/api/content', undefined, true).then(function (json) {
+    if (json && json.success) {
+      contentData = json.data;
+      $('stat-modules').textContent = Object.keys(json.data).length;
+      $('stat-fields').textContent = countFields(json.data);
+    }
+  });
+  api('GET', '/api/admin/users', undefined, true).then(function (json) {
+    if (json && json.success) $('stat-users').textContent = json.users.length;
+  });
+  $('stat-role').textContent = (myInfo && myInfo.role === 'admin') ? '管理员' : '编辑';
+}
+
+/* ---------------- 内容管理 ---------------- */
+var currentModule = null;
+function loadContentEdit() {
+  api('GET', '/api/content', undefined, true).then(function (json) {
+    if (!json || !json.success) { toast('❌ 加载内容失败'); return; }
+    contentData = json.data;
+    renderModList();
+    if (!currentModule || !contentData[currentModule]) currentModule = Object.keys(contentData)[0];
+    renderFields(currentModule);
+  });
+}
+function renderModList() {
+  var box = $('mod-list');
+  box.innerHTML = '';
+  MODULES.forEach(function (m) {
+    var allowed = myInfo.role === 'admin' || (myInfo.permissions && myInfo.permissions[m.key]);
+    if (!allowed) return;
+    var el = document.createElement('div');
+    el.className = 'mod-item' + (currentModule === m.key ? ' active' : '');
+    el.textContent = m.name;
+    el.onclick = function () { currentModule = m.key; renderModList(); renderFields(m.key); };
+    box.appendChild(el);
+  });
+}
+function renderFields(mod) {
+  var data = contentData[mod];
+  if (!data) { $('field-form').innerHTML = '<p style="color:#6b7280">该模块暂无字段</p>'; return; }
+  var html = '<h3 style="margin-bottom:18px">✏️ ' + modName(mod) + '</h3>';
+  Object.keys(data).forEach(function (key) {
+    var f = data[key];
+    var maxLen = f.max_length || 200;
+    var isImg = (f.type === 'image');
+    html += '<div class="field-row">' +
+      '<label>' + esc(f.label || key) + '<span class="hint">' + key + '</span></label>' +
+      (f.type === 'textarea'
+        ? '<textarea id="f-' + key + '" data-key="' + key + '" data-max="' + maxLen + '" data-img="' + (isImg ? 1 : 0) + '" oninput="onEdit(this)">' + esc(f.value) + '</textarea>'
+        : '<input id="f-' + key + '" type="' + (f.type === 'number' ? 'number' : 'text') + '" data-key="' + key + '" data-max="' + maxLen + '" data-img="' + (isImg ? 1 : 0) + '" value="' + esc(f.value) + '" oninput="onEdit(this)">') +
+      '<div class="counter" id="c-' + key + '"></div>' +
+      '<div class="img-preview" id="img-' + key + '"></div>' +
+      '</div>';
+  });
+  $('field-form').innerHTML = html + '<div class="save-bar">' +
+    '<button class="btn btn-primary" style="width:auto;margin:0" onclick="saveModule(\'' + mod + '\')">💾 保存修改</button>' +
+    '<button class="btn btn-ghost" onclick="previewCurrent()">👁️ 实时预览</button>' +
+    '<span class="save-msg" id="save-msg"></span></div>';
+  Object.keys(data).forEach(function (key) {
+    var el = document.getElementById('f-' + key);
+    if (el) { updateCounter(el); updateImg(el); }
+  });
+}
+function modName(mod) {
+  for (var i = 0; i < MODULES.length; i++) if (MODULES[i].key === mod) return MODULES[i].name;
+  return mod;
+}
+function onEdit(el) {
+  updateCounter(el); updateImg(el); updatePreviewCache();
+}
+function updateCounter(el) {
+  var max = parseInt(el.getAttribute('data-max') || 200, 10);
+  var len = el.value.length;
+  var c = document.getElementById('c-' + el.getAttribute('data-key'));
+  if (!c) return;
+  c.textContent = len + ' / ' + max + ' 字';
+  c.className = 'counter' + (len > max ? ' over' : (len > max * 0.9 ? ' warn' : ''));
+}
+function updateImg(el) {
+  var v = el.value.trim();
+  var box = document.getElementById('img-' + el.getAttribute('data-key'));
+  if (!box) return;
+  var isUrl = /^https?:\/\/.+/i.test(v);
+  var isImgExt = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(v);
+  if (isUrl && isImgExt) {
+    box.style.display = 'block';
+    box.innerHTML = '<img src="' + esc(v) + '" alt="预览">';
+  } else if (isUrl && !isImgExt) {
+    box.style.display = 'block';
+    box.innerHTML = '<span class="bad">⚠️ 图片格式需为 .jpg/.png/.gif/.webp/.svg</span>';
+  } else if (isUrl) {
+    box.style.display = 'block';
+    box.innerHTML = '<span class="bad">⚠️ 请填写图片 URL（http 开头）</span>';
   } else {
-    DB.permissions.push({user_id: uid, module: mod, can_edit: true});
+    box.style.display = 'none';
   }
-  saveDB();
-  renderPerms();
-  showToast('权限已更新', 'success');
 }
-
-// ===================== 导出 =====================
-function exportSite() {
-  var get = function(mod, key, def) {
-    return DB.content[mod] && DB.content[mod][key] ? DB.content[mod][key].value : def;
-  };
-
-  var html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>苏州乐园</title><script src="https://cdn.tailwindcss.com"><\/script><style>*{font-family:"Noto Sans SC",sans-serif;}</style></head><body class="bg-gray-50">';
-
-  // Hero
-  html += '<section style="background:linear-gradient(135deg,#0f766e,#065f46);min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;color:white;padding:40px;">';
-  html += '<div><h1 style="font-size:56px;font-weight:800;margin-bottom:16px;">' + get('hero','title','苏州乐园') + '</h1>';
-  html += '<h2 style="font-size:32px;font-weight:700;background:linear-gradient(135deg,#34d399,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px;">' + get('hero','subtitle','森林娱乐王国') + '</h2>';
-  html += '<p style="font-size:18px;opacity:0.85;margin-bottom:32px;">' + get('hero','description','') + '</p>';
-  html += '<div style="display:flex;gap:16px;justify-content:center;">';
-  html += '<a href="#tickets" style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:16px 32px;border-radius:999px;text-decoration:none;font-weight:600;">' + get('hero','cta_primary','立即购票') + '</a>';
-  html += '<a href="#parks" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);color:white;padding:16px 32px;border-radius:999px;text-decoration:none;font-weight:600;">' + get('hero','cta_secondary','探索园区') + '</a>';
-  html += '</div></div></section>';
-
-  // Parks
-  html += '<section id="parks" style="padding:80px 24px;background:white;"><div style="max-width:1200px;margin:0 auto;">';
-  html += '<h2 style="text-align:center;font-size:36px;font-weight:800;margin-bottom:48px;">三大园区</h2>';
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">';
-
-  var parks = [
-    {key:'forest', color:'from-emerald-50 to-teal-50', border:'border-emerald-100', icon:'🌲'},
-    {key:'water', color:'from-cyan-50 to-blue-50', border:'border-cyan-100', icon:'💦'},
-    {key:'candy', color:'from-pink-50 to-rose-50', border:'border-pink-100', icon:'🍬'},
-    {key:'mall', color:'from-amber-50 to-orange-50', border:'border-amber-100', icon:'🛍️'}
-  ];
-
-  parks.forEach(function(p) {
-    html += '<div style="background:linear-gradient(135deg,' + (p.color.includes('emerald') ? '#ecfdf5,#f0fdfa' : p.color.includes('cyan') ? '#ecfeff,#eff6ff' : p.color.includes('pink') ? '#fdf2f8,#fff1f2' : '#fffbeb,#fff7ed') + ');border:1px solid ' + (p.border.includes('emerald') ? '#a7f3d0' : p.border.includes('cyan') ? '#a5f3fc' : p.border.includes('pink') ? '#fbcfe8' : '#fde68a') + ';border-radius:16px;padding:24px;">';
-    html += '<div style="font-size:40px;margin-bottom:12px;">' + p.icon + '</div>';
-    html += '<h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">' + get('parks', p.key + '_title', '') + '</h3>';
-    html += '<p style="color:#6b7280;font-size:14px;line-height:1.6;">' + get('parks', p.key + '_desc', '') + '</p>';
-    html += '</div>';
+function saveModule(mod) {
+  var data = contentData[mod];
+  var tasks = [];
+  Object.keys(data).forEach(function (key) {
+    var el = document.getElementById('f-' + key);
+    if (!el) return;
+    var max = parseInt(el.getAttribute('data-max') || 200, 10);
+    if (el.value.length > max) {
+      toast('❌ "' + data[key].label + '" 超过字数限制（' + max + ' 字）');
+      return;
+    }
+    tasks.push(api('POST', '/api/content', { module: mod, key: key, value: el.value }, true));
   });
-  html += '</div></div></section>';
-
-  // Tickets
-  html += '<section id="tickets" style="padding:80px 24px;background:#f9fafb;"><div style="max-width:1000px;margin:0 auto;">';
-  html += '<h2 style="text-align:center;font-size:36px;font-weight:800;margin-bottom:48px;">门票预订</h2>';
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">';
-
-  var tickets = [
-    {key:'adult', title:'成人票', color:'#10b981', price:get('tickets','adult_price','218'), desc:get('tickets','adult_desc','')},
-    {key:'discount', title:'优惠票', color:'#059669', price:get('tickets','discount_price','118'), desc:get('tickets','discount_desc','')},
-    {key:'night', title:'夜场票', color:'#6366f1', price:get('tickets','night_price','69'), desc:get('tickets','night_desc','')}
-  ];
-
-  tickets.forEach(function(t) {
-    html += '<div style="background:white;border-radius:16px;padding:32px;text-align:center;border:2px solid ' + (t.key === 'discount' ? '#10b981' : '#e5e7eb') + ';">';
-    if (t.key === 'discount') html += '<div style="display:inline-block;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:4px 16px;border-radius:999px;font-size:12px;font-weight:600;margin-bottom:16px;">推荐</div>';
-    html += '<h3 style="font-size:20px;font-weight:700;margin-bottom:16px;">' + t.title + '</h3>';
-    html += '<div style="font-size:40px;font-weight:800;color:' + t.color + ';margin-bottom:8px;">¥' + t.price + '</div>';
-    html += '<p style="color:#6b7280;font-size:14px;margin-bottom:24px;">' + t.desc + '</p>';
-    html += '<button style="width:100%;padding:12px;background:' + t.color + ';color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">立即预订</button>';
-    html += '</div>';
+  if (!tasks.length) return;
+  Promise.all(tasks).then(function (results) {
+    var okAll = results.every(function (r) { return r && r.success; });
+    var msg = $('save-msg');
+    msg.style.display = 'block';
+    msg.className = 'save-msg' + (okAll ? '' : ' bad');
+    msg.textContent = okAll ? '✅ 已保存，内容已同步到网站' : '❌ 部分字段保存失败';
+    if (okAll) toast('✅ 保存成功');
   });
-  html += '</div></div></section>';
-
-  // Footer
-  html += '<footer style="background:#111827;color:white;padding:40px 24px;text-align:center;">';
-  html += '<p style="color:#9ca3af;font-size:14px;">' + get('footer','copyright','') + '</p>';
-  html += '<p style="color:#6b7280;font-size:13px;margin-top:8px;">' + get('footer','disclaimer','') + '</p>';
-  html += '</footer></body></html>';
-
-  var blob = new Blob([html], {type: 'text/html'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'index.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  showToast('index.html 已下载！请上传到 GitHub', 'success');
+}
+function previewCurrent() {
+  updatePreviewCache();
+  window.open(FRONTEND_URL + '?preview=1', '_blank');
+}
+function updatePreviewCache() {
+  try {
+    var snapshot = {};
+    MODULES.forEach(function (m) {
+      if (contentData && contentData[m.key]) snapshot[m.key] = {};
+    });
+    if (!contentData) return;
+    Object.keys(contentData).forEach(function (mod) {
+      snapshot[mod] = {};
+      Object.keys(contentData[mod]).forEach(function (key) {
+        var el = document.getElementById('f-' + key);
+        snapshot[mod][key] = { value: el ? el.value : contentData[mod][key].value };
+      });
+    });
+    localStorage.setItem('cms_live_preview', JSON.stringify(snapshot));
+  } catch (e) {}
 }
 
-// ===================== 工具函数 =====================
-function updateStats() {
-  var count = 0;
-  for (var mod in DB.content) {
-    count += Object.keys(DB.content[mod]).length;
-  }
-  document.getElementById('stat-fields').textContent = count;
+/* ---------------- 用户管理 ---------------- */
+function loadUsers() {
+  api('GET', '/api/admin/users', undefined, true).then(function (json) {
+    if (!json || !json.success) { toast('❌ 加载用户失败'); return; }
+    var html = '';
+    json.users.forEach(function (u) {
+      html += '<tr><td style="font-size:12px;color:#9ca3af">' + esc(u.id) + '</td><td>' + esc(u.username) + '</td>' +
+        '<td>' + (u.role === 'admin' ? '🛡️ 管理员' : '✏️ 编辑') + '</td>' +
+        '<td style="font-size:12px;color:#6b7280">' + (u.created_at ? String(u.created_at).slice(0, 19) : '-') + '</td>' +
+        '<td><button class="btn btn-warn btn-small" onclick="delUser(\'' + esc(u.id) + '\',\'' + esc(u.username) + '\')">删除</button></td></tr>';
+    });
+    $('user-tbody').innerHTML = html;
+  });
+}
+function addUser() {
+  var name = $('nu-name').value.trim();
+  var pass = $('nu-pass').value;
+  var role = $('nu-role').value;
+  if (!name || pass.length < 6) { toast('❌ 用户名必填，密码至少6位'); return; }
+  api('POST', '/api/admin/users', { username: name, password: pass, role: role }, true).then(function (json) {
+    if (json && json.success) { toast('✅ 用户 ' + name + ' 已创建'); $('nu-name').value = ''; $('nu-pass').value = ''; loadUsers(); }
+    else toast('❌ ' + (json && json.error ? json.error : '创建失败'));
+  });
+}
+function delUser(id, name) {
+  if (!confirm('确定删除用户 ' + name + ' 吗？')) return;
+  api('DELETE', '/api/admin/users', { id: id }, true).then(function (json) {
+    if (json && json.success) { toast('✅ 已删除'); loadUsers(); }
+    else toast('❌ ' + (json && json.error ? json.error : '删除失败'));
+  });
 }
 
-function showToast(msg, type) {
-  var toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.className = 'toast toast-' + type;
-  setTimeout(function() { toast.classList.add('show'); }, 10);
-  setTimeout(function() { toast.classList.remove('show'); }, 3000);
+/* ---------------- 权限管理 ---------------- */
+function loadPerms() {
+  api('GET', '/api/admin/permissions', undefined, true).then(function (json) {
+    if (!json || !json.success) { toast('❌ 加载权限失败'); return; }
+    var perms = json.permissions;
+    var users = {};
+    var userOrder = [];
+    perms.forEach(function (p) {
+      if (!users[p.user_id]) { users[p.user_id] = { username: p.username || p.user_id, perms: {} }; userOrder.push(p.user_id); }
+      users[p.user_id].perms[p.module] = p.can_edit;
+    });
+    var thead = '<tr><th>用户</th>';
+    MODULES.forEach(function (m) { thead += '<th>' + m.name + '</th>'; });
+    thead += '</tr>';
+    $('perm-thead').innerHTML = thead;
+    var tbody = '';
+    userOrder.forEach(function (uid) {
+      var u = users[uid];
+      tbody += '<tr><td>' + esc(u.username) + '</td>';
+      MODULES.forEach(function (m) {
+        var on = !!u.perms[m];
+        tbody += '<td><span class="switch' + (on ? ' on' : '') + '" id="sw-' + uid + '-' + m + '" onclick="togglePerm(\'' + uid + '\',\'' + m + '\',\'' + u.username + '\')"></span></td>';
+      });
+      tbody += '</tr>';
+    });
+    $('perm-tbody').innerHTML = tbody;
+  });
+}
+function togglePerm(uid, mod, username) {
+  var el = document.getElementById('sw-' + uid + '-' + mod);
+  var next = !el.classList.contains('on');
+  el.classList.toggle('on', next);
+  api('POST', '/api/admin/permissions', { user_id: uid, module: mod, can_edit: next }, true).then(function (json) {
+    if (json && json.success) toast('✅ ' + username + ' → ' + modName(mod) + '：' + (next ? '允许编辑' : '禁止编辑'));
+    else { el.classList.toggle('on', !next); toast('❌ 保存失败'); }
+  });
 }
 
-// ===================== 初始化 =====================
-loadDB();
-loadSession();
+/* ---------------- 预览 ---------------- */
+function refreshPreview() {
+  var f = $('preview-frame');
+  f.src = FRONTEND_URL + '?preview=1&t=' + Date.now();
+}
+
+/* ---------------- 启动 ---------------- */
+if (token) {
+  // 尝试恢复会话
+  api('GET', '/api/me', undefined, true).then(function (json) {
+    if (json && json.success) { myInfo = json.user; enterApp(); }
+    else doLogout();
+  }).catch(function () { doLogout(); });
+}
 </script>
 </body>
 </html>
