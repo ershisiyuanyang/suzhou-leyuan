@@ -65,7 +65,17 @@ body { background: #f3f4f6; }
         <span id="login-btn-loading" class="loading hidden"></span>
       </button>
     </form>
-    <p class="text-center text-gray-400 text-xs mt-6">默认管理员账号: admin / admin123</p>
+    
+            <div class="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <p class="text-blue-700 text-sm font-medium mb-2">🔧 首次使用？</p>
+              <p class="text-blue-600 text-xs mb-3">如果登录失败，可能是数据库未初始化。点击下面按钮检查：</p>
+              <button type="button" onclick="checkDatabase()" class="w-full bg-blue-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition flex items-center justify-center gap-2">
+                <span id="check-btn-text">检查数据库状态</span>
+                <span id="check-btn-loading" class="loading hidden"></span>
+              </button>
+              <div id="check-result" class="mt-2 text-xs hidden"></div>
+            </div>
+<p class="text-center text-gray-400 text-xs mt-6">默认管理员账号: admin / admin123</p>
   </div>
 </div>
 
@@ -951,6 +961,36 @@ async function togglePermission(userId, module, canEdit) {
   }
 }
 
+
+// 数据库诊断
+async function checkDatabase() {
+  const btnText = document.getElementById('check-btn-text');
+  const btnLoading = document.getElementById('check-btn-loading');
+  const resultDiv = document.getElementById('check-result');
+
+  btnText.classList.add('hidden');
+  btnLoading.classList.remove('hidden');
+  resultDiv.classList.add('hidden');
+
+  try {
+    // 检查 cms_users 表
+    const users = await sbRequest('/cms_users?select=*&limit=1');
+
+    if (users && users.length > 0) {
+      resultDiv.innerHTML = '<span class="text-emerald-600">✅ 数据库已初始化！找到 ' + users.length + ' 个用户。请用 admin / admin123 登录。</span>';
+      resultDiv.classList.remove('hidden');
+    } else {
+      resultDiv.innerHTML = '<span class="text-amber-600">⚠️ 数据库表存在但无用户数据。请执行 SQL 文件中的初始化语句。</span>';
+      resultDiv.classList.remove('hidden');
+    }
+  } catch (e) {
+    resultDiv.innerHTML = '<span class="text-red-600">❌ 数据库连接失败: ' + e.message + '<br>可能原因：1. SQL 未执行 2. 表不存在 3. 网络问题</span>';
+    resultDiv.classList.remove('hidden');
+  } finally {
+    btnText.classList.remove('hidden');
+    btnLoading.classList.add('hidden');
+  }
+}
 // Toast 通知
 function showToast(message, type = 'info') {
   const toast = document.getElementById('toast');
