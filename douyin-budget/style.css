@@ -92,7 +92,28 @@ select.input { cursor: pointer; }
 .brand-icon { font-size: 34px; }
 .brand h1 { font-size: 20px; }
 .today-line { color: var(--text-sub); font-size: 12px; }
-.topbar-right { display: flex; gap: 8px; }
+.topbar-right { display: flex; gap: 8px; align-items: center; }
+/* 角色徽章 */
+.role-badge { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+.role-badge.admin { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+.role-badge.user { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+
+/* ---------- 只读模式（当前账号无「修改数据」权限）：隐藏所有写控件 ---------- */
+body.readonly #btn-change-pwd,
+body.readonly .month-bar,
+body.readonly .account-row,
+body.readonly #m-weekday,
+body.readonly #m-include-today,
+body.readonly #m-rebalance,
+body.readonly .plan-add,
+body.readonly .plan-toolbar,
+body.readonly .de-add-row { display: none !important; }
+body.readonly .order-item { cursor: default; }
+body.readonly .day-edit .e-budget,
+body.readonly .day-edit .e-actual,
+body.readonly .day-edit .e-gmv,
+body.readonly .day-edit .e-impr,
+body.readonly .day-edit .e-remark { background: #f6f8fa; color: var(--text-sub); }
 
 .tabs {
   display: flex; gap: 6px; background: #fff; border: 1px solid var(--border);
@@ -281,6 +302,28 @@ td.roi { color: #0f7a3d; font-weight: 600; }
 }
 .fill-sum { font-size: 14px; }
 .fill-sum b { font-size: 16px; }
+
+/* ============ 用户管理 ============ */
+.user-add {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; box-shadow: var(--shadow);
+}
+.user-add .input:first-child { min-width: 170px; }
+.user-add .input { min-width: 150px; }
+.perm-check { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.perm-label { font-size: 12px; color: var(--text-sub); }
+.perm-box {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;
+  padding: 10px 12px; background: #f8fafc; border-radius: 8px;
+}
+.perm-box .chk { font-size: 13px; gap: 6px; }
+.perm-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; margin-right: 4px; white-space: nowrap; }
+.perm-view { background: #e8f3ff; color: #0b5cad; }
+.perm-export { background: #f0f7e8; color: #4d7c0f; }
+.perm-edit { background: #fff1f0; color: #cf1322; }
+.perm-all { background: #eef2ff; color: #4338ca; }
+.perm-none { background: #f1f3f7; color: #6b7686; }
 
 /* ============ 弹窗 ============ */
 .modal {

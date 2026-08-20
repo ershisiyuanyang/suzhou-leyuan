@@ -4,18 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>抖音本地推 · 投流预算管理</title>
-<link rel="stylesheet" href="style.css?v=20260820e">
+<link rel="stylesheet" href="style.css?v=20260820g">
 </head>
 <body>
 
-<!-- ========== 密码门禁 ========== -->
+<!-- ========== 登录门禁（管理员分配的账号密码） ========== -->
 <div id="gate" class="gate hidden">
   <div class="gate-card">
     <div class="gate-logo">🎯</div>
     <h1 id="gate-title">进入预算管理</h1>
-    <p id="gate-desc" class="gate-desc">请输入访问密码</p>
-    <input type="password" id="gate-pwd" placeholder="访问密码" autocomplete="off">
-    <button id="gate-btn" class="btn btn-primary btn-block">进入</button>
+    <p id="gate-desc" class="gate-desc">请输入账号密码登录</p>
+    <input type="text" id="gate-user" placeholder="用户名" autocomplete="off">
+    <input type="password" id="gate-pwd" placeholder="密码" autocomplete="off">
+    <button id="gate-btn" class="btn btn-primary btn-block">登录</button>
     <div id="gate-err" class="gate-err"></div>
   </div>
 </div>
@@ -32,6 +33,7 @@
       </div>
     </div>
     <div class="topbar-right">
+      <span id="role-badge" class="role-badge"></span>
       <button id="btn-change-pwd" class="btn btn-ghost btn-sm">修改密码</button>
       <button id="btn-lock" class="btn btn-ghost btn-sm">锁定</button>
     </div>
@@ -42,6 +44,7 @@
     <button class="tab" data-tab="month">📅 月度排布</button>
     <button class="tab" data-tab="plans">📋 投流计划</button>
     <button class="tab" data-tab="report">📈 报表</button>
+    <button class="tab" data-tab="users" id="tab-users-btn" style="display:none">👥 用户管理</button>
     <button class="tab" data-tab="logs">📜 操作日志</button>
   </nav>
 
@@ -227,6 +230,32 @@
       </div>
     </section>
 
+    <!-- ===== 用户管理（仅管理员） ===== -->
+    <section id="tab-users" class="tab-panel">
+      <div class="panel-head">
+        <h2>用户管理 <span class="sub">管理员专属 · 所有访问者均需账号登录，权限按需授予</span></h2>
+      </div>
+      <div class="alert" id="u-alert"></div>
+      <div class="user-add">
+        <input type="text" id="u-name" class="input" placeholder="用户名（登录账号，如 zhangsan）" autocomplete="off">
+        <input type="password" id="u-pwd" class="input" placeholder="初始密码（至少4位）" autocomplete="off">
+        <div class="perm-check">
+          <span class="perm-label">权限：</span>
+          <label class="chk"><input type="checkbox" id="u-perm-view" checked> 查看</label>
+          <label class="chk"><input type="checkbox" id="u-perm-export"> 报表导出</label>
+          <label class="chk"><input type="checkbox" id="u-perm-edit"> 修改数据</label>
+        </div>
+        <button id="u-add" class="btn btn-primary">+ 创建用户</button>
+      </div>
+      <p class="hint">权限说明：<b>查看</b>＝可进入系统查看全部数据；<b>报表导出</b>＝可导出 Excel 报表；<b>修改数据</b>＝可编辑预算/填报/计划等。管理员账号 <b>admin</b> 拥有全部权限，可修改自己的密码、管理所有用户。</p>
+      <div class="table-wrap">
+        <table id="u-table">
+          <thead><tr><th>用户名</th><th>类型</th><th>权限</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody id="u-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- ===== 操作日志 ===== -->
     <section id="tab-logs" class="tab-panel">
       <div class="panel-head">
@@ -237,7 +266,7 @@
       </div>
       <div class="table-wrap">
         <table id="l-table">
-          <thead><tr><th>时间</th><th>操作</th><th>详情</th></tr></thead>
+          <thead><tr><th>时间</th><th>操作</th><th>详情</th><th>操作人</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -248,7 +277,7 @@
   <footer class="footer">数据存储于腾讯云 CloudBase · 本页面仅供内部管理使用</footer>
 </div>
 
-<!-- 修改密码弹窗 -->
+<!-- 修改密码弹窗（仅管理员） -->
 <div id="modal" class="modal hidden">
   <div class="modal-card">
     <h3 id="modal-title">修改访问密码</h3>
@@ -263,10 +292,29 @@
   </div>
 </div>
 
+<!-- 用户编辑弹窗（编辑权限 / 重置密码，仅管理员） -->
+<div id="umodal" class="modal hidden">
+  <div class="modal-card">
+    <h3 id="umodal-title">编辑用户权限</h3>
+    <p id="umodal-user" class="sub"></p>
+    <div class="perm-box">
+      <label class="chk"><input type="checkbox" id="um-view"> 查看数据</label>
+      <label class="chk"><input type="checkbox" id="um-export"> 报表导出</label>
+      <label class="chk"><input type="checkbox" id="um-edit"> 修改数据</label>
+    </div>
+    <input type="password" id="um-pwd" class="input" placeholder="重置密码（留空则不修改）" autocomplete="off">
+    <div class="modal-actions">
+      <button id="umodal-cancel" class="btn btn-ghost">取消</button>
+      <button id="umodal-ok" class="btn btn-primary">保存</button>
+    </div>
+    <div id="umodal-err" class="gate-err"></div>
+  </div>
+</div>
+
 <div id="toast" class="toast hidden"></div>
 
 <script src="lib/cloudbase.full.js"></script>
 <script src="lib/xlsx.full.min.js"></script>
-<script src="app.js?v=20260820e"></script>
+<script src="app.js?v=20260820g"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 /* ================================================================
  * 抖音本地推 · 投流预算管理
  * 数据层：腾讯云 CloudBase NoSQL（匿名登录 + 已登录用户可读写）
- * 说明：访问密码仅作前端门禁（防君子），数据权限为登录用户可读写
+ * 说明：所有访问者均需管理员分配的账号密码登录（防君子）；权限按账号授予
  * ================================================================ */
 'use strict';
 
@@ -14,7 +14,8 @@ const C = {
   days: 'dbudget_days',
   months: 'dbudget_months',
   logs: 'dbudget_logs',
-  settings: 'dbudget_settings'
+  settings: 'dbudget_settings',
+  users: 'dbudget_users'
 };
 /* 投流计划分类（4 项，外加"未分类"用于未指派的历史计划） */
 const CATEGORIES = ['通投短视频', '通投搜索', '直播', '门店全域'];
@@ -34,7 +35,31 @@ function catIndex(c) { const i = CATEGORIES.indexOf(c); return i < 0 ? 99 : i; }
 function catOptions(selected) {
   return ['', ...CATEGORIES].map(c => `<option value="${esc(c)}" ${c === (selected || '') ? 'selected' : ''}>${c || '未分类'}</option>`).join('');
 }
-const SESSION_KEY = 'dbpwd_ok';
+/* ---------- 账号与权限 ----------
+ * 所有访问者均需账号密码登录；权限三选可组合：
+ *   view   —— 查看数据（登录后即可查看全部数据）
+ *   export —— 报表导出（Excel）
+ *   edit   —— 修改数据（预算/填报/计划等）
+ * 管理员账号 admin 拥有全部权限，并可管理用户。
+ * 账号存储：admin 密码存 settings.accessPwdHash（沿用）；
+ *           普通用户存集合 dbudget_users（username + pwdHash + perms）。
+ */
+let session = { username: 'admin', role: 'admin', perms: { view: true, export: true, edit: true } };
+const SESSION_KEY = 'dbudget_session';   // sessionStorage 中登录会话
+function isAdmin() { return session.role === 'admin'; }
+function can(p) { return isAdmin() || !!session.perms[p]; }
+function requireEdit() {
+  if (!can('edit')) { toast('当前账号无「修改数据」权限，仅可查看', 'err'); return false; }
+  return true;
+}
+function requireExport() {
+  if (!can('export')) { toast('当前账号无「报表导出」权限', 'err'); return false; }
+  return true;
+}
+function requireAdmin() {
+  if (!isAdmin()) { toast('此操作需要管理员权限', 'err'); return false; }
+  return true;
+}
 
 /* ---------- 小工具 ---------- */
 const $ = (sel) => document.querySelector(sel);
@@ -161,6 +186,7 @@ async function getSetting(key) {
   return res.data.length ? res.data[0].value : null;
 }
 async function setSetting(key, value) {
+  if (!can('edit')) throw new Error('当前账号无修改权限');
   const res = await db.collection(C.settings).where({ key }).limit(1).get();
   if (res.data.length) {
     await db.collection(C.settings).doc(res.data[0]._id).update({ value });
@@ -169,11 +195,13 @@ async function setSetting(key, value) {
   }
 }
 async function addLog(action, detail) {
+  if (!can('edit')) return;   // 无修改权限不写日志
   try {
-    await db.collection(C.logs).add({ time: new Date().toISOString(), action, detail });
+    await db.collection(C.logs).add({ time: new Date().toISOString(), action, detail, by: session.username || 'admin' });
   } catch (e) { console.warn('写日志失败', e); }
 }
 async function upsertMonth(month, totalBudget, note) {
+  if (!requireEdit()) return;
   const res = await db.collection(C.months).where({ month }).limit(1).get();
   const doc = { totalBudget: moneyRaw(totalBudget), note: note || '', updatedAt: new Date().toISOString() };
   if (res.data.length) {
@@ -185,6 +213,7 @@ async function upsertMonth(month, totalBudget, note) {
 /* 按 (date, planId) 幂等写入：用复合 _id + doc().set/update，避免 add 返回 _id 字段名不一致问题 */
 const dayId = (date, planId) => date + '__' + planId;
 async function upsertDay(date, planId, patch) {
+  if (!requireEdit()) return null;
   const id = dayId(date, planId);
   const ref = db.collection(C.days).doc(id);
   const old = dayDoc(date, planId);
@@ -226,58 +255,164 @@ function showAlert(id, msg, type = 'info') {
 }
 function hideAlert(id) { $('#' + id).className = 'alert'; }
 
-/* ---------- 密码门禁 ---------- */
+/* ---------- 登录门禁（账号密码登录，管理员分配账号与权限） ---------- */
+function readSession() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+    return s && s.username ? s : null;
+  } catch (e) { return null; }
+}
+function saveSession(s) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
+async function findUser(name) {
+  const res = await db.collection(C.users).where({ username: name }).limit(1).get();
+  return res.data[0] || null;
+}
+
 async function checkGate() {
   const hash = await getSetting('accessPwdHash');
+
+  /* 已有会话：直接恢复进入 */
+  const saved = readSession();
+  if (saved) {
+    session = {
+      username: saved.username,
+      role: saved.role === 'admin' ? 'admin' : 'user',
+      perms: saved.perms || { view: true, export: true, edit: true }
+    };
+    enterApp();
+    return;
+  }
+
+  const userInput = $('#gate-user');
+  const pwdInput = $('#gate-pwd');
+
+  /* 首次使用：设置管理员密码（账号固定 admin），游客/免密均不可用 */
   if (!hash) {
-    $('#gate-title').textContent = '首次使用 · 设置访问密码';
-    $('#gate-desc').textContent = '设置一个访问密码（至少4位），请牢记';
+    $('#gate-title').textContent = '首次使用 · 设置管理员密码';
+    $('#gate-desc').textContent = '管理员账号为 admin，请设置密码（至少4位）并牢记；之后可在此为用户分配账号与权限';
+    userInput.value = 'admin';
+    userInput.disabled = true;
+    $('#gate-btn').textContent = '设置并进入';
     $('#gate-btn').onclick = async () => {
-      const v = $('#gate-pwd').value;
+      const v = pwdInput.value;
       if (v.length < 4) { $('#gate-err').textContent = '密码至少 4 位'; return; }
-      const h = hashPwd(v);
       try {
-        await setSetting('accessPwdHash', h);
-        await addLog('初始化', '设置访问密码');
-        sessionStorage.setItem(SESSION_KEY, h);
+        session = { username: 'admin', role: 'admin', perms: { view: true, export: true, edit: true } };
+        await setSetting('accessPwdHash', hashPwd(v));
+        await addLog('初始化', '设置管理员密码，启用账号密码登录');
+        saveSession(session);
         toast('密码已设置，请牢记');
         enterApp();
       } catch (e) { $('#gate-err').textContent = '保存失败：' + e.message; }
     };
-  } else if (sessionStorage.getItem(SESSION_KEY) === hash) {
-    enterApp();
-  } else {
-    $('#gate-title').textContent = '进入预算管理';
-    $('#gate-desc').textContent = '请输入访问密码';
-    $('#gate-btn').onclick = () => {
-      const v = hashPwd($('#gate-pwd').value);
-      if (v === hash) { sessionStorage.setItem(SESSION_KEY, hash); enterApp(); }
-      else { $('#gate-err').textContent = '密码不正确'; $('#gate-pwd').value = ''; }
-    };
-    $('#gate-pwd').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#gate-btn').click(); });
+    return;
   }
+
+  /* 正常登录：用户名 + 密码 */
+  $('#gate-title').textContent = '进入预算管理';
+  $('#gate-desc').textContent = '请输入管理员分配的账号密码登录';
+  userInput.disabled = false;
+  userInput.value = '';
+  $('#gate-btn').textContent = '登录';
+  $('#gate-btn').onclick = doLogin;
+  pwdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#gate-btn').click(); });
+  userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#gate-btn').click(); });
 }
+
+async function doLogin() {
+  const name = ($('#gate-user').value || '').trim();
+  const pwd = $('#gate-pwd').value;
+  $('#gate-err').textContent = '';
+  if (!name || !pwd) { $('#gate-err').textContent = '请输入用户名和密码'; return; }
+  /* 管理员账号 */
+  if (name === 'admin') {
+    const hash = await getSetting('accessPwdHash');
+    if (hash && hashPwd(pwd) === hash) {
+      session = { username: 'admin', role: 'admin', perms: { view: true, export: true, edit: true } };
+      saveSession(session);
+      enterApp();
+      return;
+    }
+    $('#gate-err').textContent = '用户名或密码不正确';
+    $('#gate-pwd').value = '';
+    return;
+  }
+  /* 普通用户：校验 dbudget_users 账号 */
+  try {
+    const u = await findUser(name);
+    if (!u || hashPwd(pwd) !== u.pwdHash) {
+      $('#gate-err').textContent = '用户名或密码不正确';
+      $('#gate-pwd').value = '';
+      return;
+    }
+    const perms = u.perms || {};
+    if (!perms.view) {
+      $('#gate-err').textContent = '该账号未被授予查看权限，请联系管理员';
+      $('#gate-pwd').value = '';
+      return;
+    }
+    session = {
+      username: name,
+      role: 'user',
+      perms: { view: true, export: !!perms.export, edit: !!perms.edit }
+    };
+    saveSession(session);
+    enterApp();
+  } catch (e) { $('#gate-err').textContent = '登录失败：' + e.message; }
+}
+
 function enterApp() {
   $('#gate').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  document.body.classList.toggle('readonly', !can('edit'));
+  const badge = $('#role-badge');
+  const lockBtn = $('#btn-lock');
+  const changePwdBtn = $('#btn-change-pwd');
+  const usersTab = $('#tab-users-btn');
+  if (isAdmin()) {
+    badge.textContent = '🛡️ 管理员';
+    badge.className = 'role-badge admin';
+    lockBtn.textContent = '锁定';
+    lockBtn.title = '锁定并返回登录页';
+    changePwdBtn.style.display = '';
+    usersTab.style.display = '';
+  } else {
+    const tags = [];
+    if (can('edit')) tags.push('可修改');
+    if (can('export')) tags.push('可导出');
+    badge.textContent = `👤 ${session.username}（${tags.join('·') || '只读'}）`;
+    badge.className = 'role-badge user';
+    lockBtn.textContent = '退出';
+    lockBtn.title = '退出当前账号，返回登录页';
+    changePwdBtn.style.display = 'none';
+    usersTab.style.display = 'none';
+  }
+  /* 导出按钮按权限显隐 */
+  $('#r-export').style.display = can('export') ? '' : 'none';
   loadAll();
 }
+
 function lockApp() {
-  sessionStorage.removeItem(SESSION_KEY);
+  clearSession();
+  session = { username: 'admin', role: 'admin', perms: { view: true, export: true, edit: true } };
   $('#app').classList.add('hidden');
+  $('#gate-user').value = '';
   $('#gate-pwd').value = '';
   $('#gate-err').textContent = '';
   $('#gate').classList.remove('hidden');
   checkGate();
 }
 
-/* ---------- 修改密码 ---------- */
+/* ---------- 修改密码（仅管理员） ---------- */
 function openModal() {
+  if (!requireAdmin()) return;
   $('#modal-old').value = ''; $('#modal-new').value = ''; $('#modal-new2').value = ''; $('#modal-err').textContent = '';
   $('#modal').classList.remove('hidden');
 }
 $('#modal-cancel').onclick = () => $('#modal').classList.add('hidden');
 $('#modal-ok').onclick = async () => {
+  if (!requireAdmin()) return;
   const old = $('#modal-old').value, n1 = $('#modal-new').value, n2 = $('#modal-new2').value;
   const cur = await getSetting('accessPwdHash');
   if (hashPwd(old) !== cur) { $('#modal-err').textContent = '原密码不正确'; return; }
@@ -285,7 +420,7 @@ $('#modal-ok').onclick = async () => {
   if (n1 !== n2) { $('#modal-err').textContent = '两次输入不一致'; return; }
   try {
     await setSetting('accessPwdHash', hashPwd(n1));
-    sessionStorage.setItem(SESSION_KEY, hashPwd(n1));
+    saveSession(session);
     await addLog('安全', '修改访问密码');
     $('#modal').classList.add('hidden');
     toast('密码已修改');
@@ -308,7 +443,7 @@ async function loadAll() {
     let needOrderPersist = false;
     plans.forEach((pl, i) => { if (pl.order == null || pl.order === '') { pl.order = i; needOrderPersist = true; } });
     plans.sort((a, b) => (Number(a.order) - Number(b.order)) || (a.createdAt || '').localeCompare(b.createdAt || ''));
-    if (needOrderPersist) {
+    if (needOrderPersist && can('edit')) {
       try {
         await Promise.all(plans.map(pl => db.collection(C.plans).doc(pl._id).update({ order: pl.order })));
         await addLog('计划', '初始化计划排序字段（order）');
@@ -529,6 +664,7 @@ function renderAccount() {
 
 /* 保存账户余额 */
 $('#m-save-account').onclick = async () => {
+  if (!requireEdit()) return;
   const v = parseFloat($('#m-account').value);
   if (isNaN(v) || v < 0) { toast('请输入有效的账户余额', 'err'); return; }
   const oldVal = accountBalance;
@@ -548,6 +684,7 @@ $('#m-save-account').onclick = async () => {
 
 /* 同步本月消耗：从账户余额中扣减本月实际已花费金额 */
 $('#m-sync-account').onclick = async () => {
+  if (!requireEdit()) return;
   if (accountBalance == null) { toast('请先设置账户余额', 'err'); return; }
   /* 计算本月实际消耗 */
   const mm = month;
@@ -660,21 +797,24 @@ function openDayEdit(ds) {
   const shown = plans.filter(hasData);                         // 当天执行的计划（含停用但有数据的）
   const hiddenPool = activePlans.filter(p => !hasData(p));      // 启用且当天未执行的计划（可手动添加）
 
+  const isViewer = !can('edit');                                // 无修改权限：只读查看
   function rowHtml(p) {
     const doc = m[p._id];
+    const dis = (cond) => (isViewer || cond) ? 'disabled' : '';
     return `<div class="row" data-plan="${p._id}">
       <span class="pname">${esc(p.name)}${p.active === false ? ' <span class="badge badge-off">停用</span>' : ''}</span>
-      <input type="number" class="input e-budget" min="0" step="100" value="${doc && doc.budget != null ? doc.budget : ''}" placeholder="预算" title="上下调控键每次 ±100">
-      <input type="number" class="input no-spin e-actual" min="0" value="${doc && doc.actual != null ? doc.actual : ''}" placeholder="实际" ${canFill ? '' : 'disabled'}>
-      <input type="number" class="input no-spin e-gmv" min="0" value="${doc && doc.gmv != null ? doc.gmv : ''}" placeholder="GMV" ${canFill ? '' : 'disabled'}>
-      <input type="number" class="input no-spin e-impr" min="0" value="${doc && doc.impressions != null ? doc.impressions : ''}" placeholder="曝光量" ${canFill ? '' : 'disabled'}>
-      <input type="text" class="input e-remark" value="${doc && doc.remark ? esc(doc.remark) : ''}" placeholder="备注（异常说明等）">
+      <input type="number" class="input e-budget" min="0" step="100" value="${doc && doc.budget != null ? doc.budget : ''}" placeholder="预算" title="上下调控键每次 ±100" ${dis(false)}>
+      <input type="number" class="input no-spin e-actual" min="0" value="${doc && doc.actual != null ? doc.actual : ''}" placeholder="实际" ${dis(!canFill)}>
+      <input type="number" class="input no-spin e-gmv" min="0" value="${doc && doc.gmv != null ? doc.gmv : ''}" placeholder="GMV" ${dis(!canFill)}>
+      <input type="number" class="input no-spin e-impr" min="0" value="${doc && doc.impressions != null ? doc.impressions : ''}" placeholder="曝光量" ${dis(!canFill)}>
+      <input type="text" class="input e-remark" value="${doc && doc.remark ? esc(doc.remark) : ''}" placeholder="备注（异常说明等）" ${dis(false)}>
     </div>`;
   }
   function refreshRows() {
     const wrap = panel.querySelector('#de-rows');
-    wrap.innerHTML = shown.map(rowHtml).join('') || '<p class="hint">该日暂无执行计划，可从下方添加</p>';
+    wrap.innerHTML = shown.map(rowHtml).join('') || '<p class="hint">该日暂无执行计划</p>';
     const sel = panel.querySelector('#de-add-plan');
+    if (!sel) return;
     const rest = hiddenPool.filter(p => !shown.includes(p));
     sel.innerHTML = '<option value="">＋ 添加计划…</option>' + rest.map(p => `<option value="${p._id}">${esc(p.name)}</option>`).join('');
     sel.disabled = !rest.length;
@@ -683,7 +823,7 @@ function openDayEdit(ds) {
   const past = ds < todayStr();
   const lockedDay = isManualDay(ds);
   const savedBudgetTotal = Object.values(m).reduce((s, d) => s + ((d && d.budget) || 0), 0);
-  const headHtml = () => `📅 ${ds} 计划明细（仅显示当天执行的计划）${isManualDay(ds) ? ' 🔒 已锁定（重排不覆盖）' : ''} ${past ? '<span class="sub">过去日期可改全部数据</span>' : '<span class="sub">今天可改实际/GMV/曝光；未来仅预算</span>'}`;
+  const headHtml = () => `📅 ${ds} 计划明细（仅显示当天执行的计划）${isManualDay(ds) ? ' 🔒 已锁定（重排不覆盖）' : ''} ${isViewer ? '<span class="sub">👤 只读查看</span>' : (past ? '<span class="sub">过去日期可改全部数据</span>' : '<span class="sub">今天可改实际/GMV/曝光；未来仅预算</span>')}`;
   const panel = document.createElement('div');
   panel.className = 'day-edit';
   panel.id = 'day-edit-panel';
@@ -694,14 +834,15 @@ function openDayEdit(ds) {
       <div id="de-rows"></div>
     </div>
     <div class="de-sum">日预算合计 <b id="de-sum-budget">¥0</b>（原 ${money(savedBudgetTotal)}，调整 <span id="de-sum-diff">¥0</span>）<span class="sub">｜实际合计 <span id="de-sum-actual">¥0</span></span></div>
+    ${isViewer ? '' : `
     <div class="de-add-row">
       <select id="de-add-plan" class="input"></select>
       <button class="btn btn-ghost btn-sm" id="de-add-btn">添加</button>
-    </div>
+    </div>`}
     <div class="actions">
-      <button class="btn btn-ghost btn-sm" id="de-lock"${lockedDay ? ' title="解除后该日预算可被「一键重排」重新分配"' : ' title="锁定后「一键重排」不会改动该日预算（手动修改预算保存后也会自动锁定）"'}>${lockedDay ? '🔓 解除锁定' : '🔒 锁定此日'}</button>
+      ${isViewer ? '' : `<button class="btn btn-ghost btn-sm" id="de-lock"${lockedDay ? ' title="解除后该日预算可被「一键重排」重新分配"' : ' title="锁定后「一键重排」不会改动该日预算（手动修改预算保存后也会自动锁定）"'}>${lockedDay ? '🔓 解除锁定' : '🔒 锁定此日'}</button>`}
       <button class="btn btn-ghost btn-sm" id="de-close">关闭</button>
-      <button class="btn btn-primary btn-sm" id="de-save">保存该日数据</button>
+      ${isViewer ? '' : '<button class="btn btn-primary btn-sm" id="de-save">保存该日数据</button>'}
     </div>`;
   const old = $('#day-edit-panel');
   if (old) old.remove();
@@ -727,6 +868,7 @@ function openDayEdit(ds) {
   updateDeSum();
 
   $('#de-close').onclick = () => panel.remove();
+  if (isViewer) return;   // 游客只读：不绑定任何写操作
   /* 锁定 / 解除锁定：锁定日的预算不会被「一键重排」改写 */
   $('#de-lock').onclick = async () => {
     const docs = Object.values(m).filter(d => d && ((d.budget || 0) > 0 || (d.actual || 0) > 0 || (d.gmv || 0) > 0 || (d.impressions || 0) > 0));
@@ -811,6 +953,7 @@ async function refreshMonth() {
 }
 
 $('#m-save-total').onclick = async () => {
+  if (!requireEdit()) return;
   const total = parseFloat($('#m-total').value);
   const note = $('#m-note').value.trim();
   if (isNaN(total) || total < 0) { toast('请输入有效的总预算', 'err'); return; }
@@ -825,6 +968,7 @@ $('#m-save-total').onclick = async () => {
 
 /* ---------- 一键重排（核心） ---------- */
 $('#m-rebalance').onclick = async () => {
+  if (!requireEdit()) return;
   /* 剩余可排预算 = 当月总预算 − 实际已发生（全月），与"账户实际余额"概念分离，不回写总预算 */
   const total = Number(monthRecords ? monthRecords.totalBudget || 0 : 0);
   if (!total) { toast('请先在「月度排布」设置当月总预算', 'err'); return; }
@@ -1030,6 +1174,19 @@ function renderPlans() {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7686">暂无计划，请添加</td></tr>';
     return;
   }
+  /* 无修改权限：只读展示计划列表 */
+  if (!can('edit')) {
+    tbody.innerHTML = plans.map(p => `
+      <tr data-id="${p._id}">
+        <td>${esc(p.name)}</td>
+        <td>${catBadge(p.category)}</td>
+        <td>${esc(p.remark || '')}</td>
+        <td><span class="badge ${p.active === false ? 'badge-off' : 'badge-on'}">${p.active === false ? '停用' : '启用'}</span></td>
+        <td>${p.createdAt ? p.createdAt.slice(0, 10) : '—'}</td>
+        <td class="sub">只读</td>
+      </tr>`).join('');
+    return;
+  }
   tbody.innerHTML = plans.map(p => `
     <tr data-id="${p._id}">
       <td><input class="input p-name" value="${esc(p.name)}" style="min-width:160px"></td>
@@ -1072,6 +1229,7 @@ function updatePlanSaveBtn() {
   btn.disabled = n === 0;
 }
 $('#p-add').onclick = async () => {
+  if (!requireEdit()) return;
   const name = $('#p-name').value.trim();
   const remark = $('#p-remark').value.trim();
   const category = $('#p-cat').value;
@@ -1091,6 +1249,7 @@ $('#p-add').onclick = async () => {
   } catch (e) { toast('新增失败：' + e.message, 'err'); }
 };
 $('#p-table').addEventListener('click', async (e) => {
+  if (!requireEdit()) return;
   const btn = e.target.closest('.op-btn');
   if (!btn) return;
   const tr = btn.closest('tr');
@@ -1137,6 +1296,7 @@ $('#p-table').addEventListener('input', (e) => {
 
 /* 一键保存：批量提交所有有改动的计划（名称/分类/备注） */
 $('#p-save-all').onclick = async () => {
+  if (!requireEdit()) return;
   const rows = [...$('#p-table tbody').querySelectorAll('tr[data-id]')];
   const changed = [];
   for (const tr of rows) {
@@ -1326,14 +1486,16 @@ function renderReport() {
 function renderPlanOrder() {
   const ul = $('#r-order-list');
   if (!ul) return;
+  const ro = !can('edit');   // 无修改权限：不渲染拖拽手柄
   ul.innerHTML = plans.map((p, i) => `
-    <li class="order-item" draggable="true" data-id="${p._id}">
-      <span class="drag-handle">⠿</span>
+    <li class="order-item" ${ro ? '' : 'draggable="true"'} data-id="${p._id}">
+      ${ro ? '' : '<span class="drag-handle">⠿</span>'}
       <span class="order-idx">${i + 1}</span>
       <span class="order-name">${esc(p.name)}</span>
       ${catBadge(p.category)}
       <span class="order-state">${p.active === false ? '<span class="badge badge-off">停用</span>' : ''}</span>
     </li>`).join('');
+  if (ro) return;
   bindOrderDrag();
 }
 function bindOrderDrag() {
@@ -1354,6 +1516,7 @@ function bindOrderDrag() {
   });
 }
 async function savePlanOrder() {
+  if (!requireEdit()) return;
   const ul = $('#r-order-list');
   if (!ul) return;
   const ids = [...ul.querySelectorAll('.order-item')].map(li => li.dataset.id);
@@ -1376,6 +1539,7 @@ function sumDay(dayMap) {
 }
 
 $('#r-export').onclick = () => {
+  if (!requireExport()) return;
   if (!report) { toast('请先生成报表', 'err'); return; }
   if (typeof XLSX === 'undefined') { toast('Excel 组件未加载', 'err'); return; }
   const { from, to, dayRows, planRows, catRows, detail } = report;
@@ -1399,6 +1563,137 @@ $('#r-export').onclick = () => {
 };
 
 /* ================================================================
+ * 用户管理（仅管理员）：创建账号 / 权限分配 / 重置密码 / 删除
+ * ================================================================ */
+let userCache = [];
+
+async function renderUsers() {
+  const tbody = $('#u-tbody');
+  if (!tbody) return;
+  hideAlert('u-alert');
+  try {
+    userCache = await getAll(C.users, {});
+  } catch (e) {
+    showAlert('u-alert', '用户列表加载失败：' + e.message, 'err');
+    tbody.innerHTML = '';
+    return;
+  }
+  userCache.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+  const permBadges = (perms) => {
+    perms = perms || {};
+    if (perms.edit) return '<span class="perm-badge perm-all">查看·导出·修改</span>';
+    const parts = [];
+    if (perms.view) parts.push('<span class="perm-badge perm-view">查看</span>');
+    if (perms.export) parts.push('<span class="perm-badge perm-export">导出</span>');
+    return parts.join('') || '<span class="perm-badge perm-none">无权限</span>';
+  };
+  tbody.innerHTML = `
+    <tr>
+      <td><b>admin</b></td>
+      <td><span class="badge" style="background:#eef2ff;color:#4338ca">管理员</span></td>
+      <td><span class="perm-badge perm-all">全部权限</span></td>
+      <td>—</td>
+      <td class="sub">内置账号</td>
+    </tr>` +
+    userCache.map(u => `
+    <tr data-id="${esc(u._id)}">
+      <td><b>${esc(u.username)}</b></td>
+      <td><span class="badge badge-on">普通用户</span></td>
+      <td>${permBadges(u.perms)}</td>
+      <td>${u.createdAt ? u.createdAt.slice(0, 10) : '—'}</td>
+      <td>
+        <button class="op-btn u-edit">编辑权限</button>
+        <button class="op-btn danger u-del">删除</button>
+      </td>
+    </tr>`).join('');
+}
+
+$('#u-add').onclick = async () => {
+  if (!requireAdmin()) return;
+  const name = ($('#u-name').value || '').trim();
+  const pwd = $('#u-pwd').value;
+  const perms = {
+    view: $('#u-perm-view').checked,
+    export: $('#u-perm-export').checked,
+    edit: $('#u-perm-edit').checked
+  };
+  if (!name) { toast('请输入用户名', 'err'); return; }
+  if (!/^[\w\u4e00-\u9fa5-]{2,20}$/.test(name)) { toast('用户名需 2-20 位（中文/字母/数字/_/-）', 'err'); return; }
+  if (name === 'admin') { toast('admin 为内置管理员账号，无需创建', 'err'); return; }
+  if (pwd.length < 4) { toast('初始密码至少 4 位', 'err'); return; }
+  if (!perms.view && !perms.export && !perms.edit) { toast('请至少勾选一项权限', 'err'); return; }
+  try {
+    const exist = await findUser(name);
+    if (exist) { toast('用户名已存在', 'err'); return; }
+    const id = 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await db.collection(C.users).doc(id).set({
+      username: name, pwdHash: hashPwd(pwd), perms,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+    await addLog('用户管理', `创建用户「${name}」（查看${perms.view ? '✓' : '✗'} / 导出${perms.export ? '✓' : '✗'} / 修改${perms.edit ? '✓' : '✗'}）`);
+    $('#u-name').value = ''; $('#u-pwd').value = '';
+    $('#u-perm-view').checked = true; $('#u-perm-export').checked = false; $('#u-perm-edit').checked = false;
+    renderUsers();
+    toast('用户已创建');
+  } catch (e) { toast('创建失败：' + e.message, 'err'); }
+};
+
+/* 用户列表操作：编辑权限 / 删除 */
+let editingUserId = null;
+$('#u-tbody').addEventListener('click', async (e) => {
+  if (!requireAdmin()) return;
+  const btn = e.target.closest('.op-btn');
+  if (!btn) return;
+  const tr = btn.closest('tr[data-id]');
+  if (!tr) return;
+  const id = tr.dataset.id;
+  const u = userCache.find(x => x._id === id);
+  if (btn.classList.contains('u-edit')) {
+    if (!u) return;
+    editingUserId = id;
+    $('#umodal-user').textContent = '账号：' + u.username;
+    $('#um-view').checked = !!(u.perms && u.perms.view);
+    $('#um-export').checked = !!(u.perms && u.perms.export);
+    $('#um-edit').checked = !!(u.perms && u.perms.edit);
+    $('#um-pwd').value = '';
+    $('#umodal-err').textContent = '';
+    $('#umodal').classList.remove('hidden');
+  } else if (btn.classList.contains('u-del')) {
+    if (!u) return;
+    if (!confirm(`确定删除用户「${u.username}」？删除后该账号将无法登录。`)) return;
+    try {
+      await db.collection(C.users).doc(id).remove();
+      await addLog('用户管理', `删除用户「${u.username}」`);
+      renderUsers();
+      toast('已删除');
+    } catch (err) { toast('删除失败：' + err.message, 'err'); }
+  }
+});
+
+$('#umodal-cancel').onclick = () => $('#umodal').classList.add('hidden');
+$('#umodal-ok').onclick = async () => {
+  if (!requireAdmin()) return;
+  const perms = {
+    view: $('#um-view').checked,
+    export: $('#um-export').checked,
+    edit: $('#um-edit').checked
+  };
+  if (!perms.view && !perms.export && !perms.edit) { $('#umodal-err').textContent = '请至少保留一项权限'; return; }
+  const newPwd = $('#um-pwd').value;
+  if (newPwd && newPwd.length < 4) { $('#umodal-err').textContent = '新密码至少 4 位'; return; }
+  try {
+    const patch = { perms, updatedAt: new Date().toISOString() };
+    if (newPwd) patch.pwdHash = hashPwd(newPwd);
+    await db.collection(C.users).doc(editingUserId).update(patch);
+    const u = userCache.find(x => x._id === editingUserId);
+    await addLog('用户管理', `更新用户「${u ? u.username : editingUserId}」权限（查看${perms.view ? '✓' : '✗'} / 导出${perms.export ? '✓' : '✗'} / 修改${perms.edit ? '✓' : '✗'}）${newPwd ? '，重置密码' : ''}`);
+    $('#umodal').classList.add('hidden');
+    renderUsers();
+    toast('已保存');
+  } catch (e) { $('#umodal-err').textContent = '保存失败：' + e.message; }
+};
+
+/* ================================================================
  * 操作日志
  * ================================================================ */
 async function renderLogs() {
@@ -1406,16 +1701,16 @@ async function renderLogs() {
     const res = await db.collection(C.logs).orderBy('time', 'desc').limit(200).get();
     const tbody = $('#l-table tbody');
     if (!res.data.length) {
-      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#6b7686">暂无日志</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#6b7686">暂无日志</td></tr>';
       return;
     }
     tbody.innerHTML = res.data.map(l => {
       const t = new Date(l.time);
       const ts = `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())} ${pad2(t.getHours())}:${pad2(t.getMinutes())}:${pad2(t.getSeconds())}`;
-      return `<tr><td>${ts}</td><td><b>${esc(l.action)}</b></td><td>${esc(l.detail || '')}</td></tr>`;
+      return `<tr><td>${ts}</td><td><b>${esc(l.action)}</b></td><td>${esc(l.detail || '')}</td><td>${esc(l.by || '—')}</td></tr>`;
     }).join('');
   } catch (e) {
-    $('#l-table tbody').innerHTML = `<tr><td colspan="3" style="text-align:center;color:#b42318">日志加载失败：${esc(e.message)}</td></tr>`;
+    $('#l-table tbody').innerHTML = `<tr><td colspan="4" style="text-align:center;color:#b42318">日志加载失败：${esc(e.message)}</td></tr>`;
   }
 }
 
@@ -1433,13 +1728,14 @@ $$('.tab').forEach(tab => {
       if (!report) runReport();
       renderPlanOrder();
     }
+    if (tab.dataset.tab === 'users') renderUsers();
     if (tab.dataset.tab === 'logs') renderLogs();
   };
 });
 
 /* ---------- 顶部按钮 ---------- */
 $('#btn-change-pwd').onclick = openModal;
-$('#btn-lock').onclick = () => { lockApp(); toast('已锁定'); };
+$('#btn-lock').onclick = () => { const wasUser = !isAdmin(); lockApp(); toast(wasUser ? '已退出登录' : '已锁定'); };
 
 /* ---------- 启动 ---------- */
 (function boot() {
