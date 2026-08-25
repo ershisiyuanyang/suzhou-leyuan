@@ -15,7 +15,9 @@ const C = {
   months: 'dbudget_months',
   logs: 'dbudget_logs',
   settings: 'dbudget_settings',
-  users: 'dbudget_users'
+  users: 'dbudget_users',
+  nodes: 'dbudget_nodes',
+  weather: 'dbudget_weather'
 };
 /* 投流计划分类（4 项，外加"未分类"用于未指派的历史计划） */
 const CATEGORIES = ['通投短视频', '通投搜索', '直播', '门店全域'];
@@ -92,6 +94,325 @@ function addDays(dateStr, n) {
   return fmtDate(d);
 }
 function parseDate(dateStr) { return new Date(dateStr + 'T00:00:00'); }
+
+/* ================================================================
+ * 天气 / 节点（日历与报表增强）
+ * ================================================================ */
+
+/* 节点类型：内置国假日/传统节日 + 用户自定义营销节点 */
+const NODE_TYPES = {
+  holiday:   { label: '国假日',   color: '#e54d42' },
+  festival:  { label: '传统节日', color: '#fa8c16' },
+  marketing: { label: '营销节点', color: '#1677ff' },
+  custom:    { label: '自定义',   color: '#8c8c8c' }
+};
+
+/* 内置节点种子：国假日来自 2026 官方安排（gov.cn），传统节日按农历换算。
+   2027 国假日尚未公布（通常前一年 11 月发布），可日后补充；用户亦可在界面手动增删。 */
+const BUILTIN_NODES = [
+  { date:'2026-01-01', name:'元旦', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-01-02', name:'元旦', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-01-03', name:'元旦', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-15', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-16', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-17', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-18', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-19', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-20', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-21', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-22', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-02-23', name:'春节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-03-03', name:'元宵节', type:'festival', color:'#fa8c16', note:'正月十五' },
+  { date:'2026-03-20', name:'龙抬头', type:'festival', color:'#fa8c16', note:'二月初二' },
+  { date:'2026-04-04', name:'清明节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-04-05', name:'清明节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-04-06', name:'清明节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-05-01', name:'劳动节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-05-02', name:'劳动节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-05-03', name:'劳动节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-05-04', name:'劳动节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-05-05', name:'劳动节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-06-19', name:'端午节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-06-20', name:'端午节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-06-21', name:'端午节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-08-19', name:'七夕', type:'festival', color:'#fa8c16', note:'七月初七' },
+  { date:'2026-08-27', name:'中元节', type:'festival', color:'#fa8c16', note:'七月十五' },
+  { date:'2026-09-25', name:'中秋节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-09-26', name:'中秋节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-09-27', name:'中秋节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-01', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-02', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-03', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-04', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-05', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-06', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-07', name:'国庆节', type:'holiday', color:'#e54d42', note:'' },
+  { date:'2026-10-19', name:'重阳节', type:'festival', color:'#fa8c16', note:'九月初九' },
+  { date:'2026-12-22', name:'冬至', type:'festival', color:'#fa8c16', note:'节气' },
+  { date:'2027-01-26', name:'腊八节', type:'festival', color:'#fa8c16', note:'腊月初八' },
+  { date:'2027-02-10', name:'小年', type:'festival', color:'#fa8c16', note:'腊月廿三' },
+  { date:'2027-02-15', name:'除夕', type:'festival', color:'#fa8c16', note:'腊月廿九' }
+];
+
+/* WMO 天气代码 → [中文描述, 图标] */
+const WMO = {
+  0:['晴','☀️'],1:['大致晴朗','🌤️'],2:['局部多云','⛅'],3:['阴','☁️'],
+  45:['雾','🌫️'],48:['雾凇','🌫️'],
+  51:['毛毛雨','🌦️'],53:['毛毛雨','🌦️'],55:['毛毛雨','🌦️'],
+  56:['冻毛毛雨','🌧️'],57:['冻毛毛雨','🌧️'],
+  61:['小雨','🌧️'],63:['中雨','🌧️'],65:['大雨','🌧️'],
+  66:['冻雨','🌧️'],67:['冻雨','🌧️'],
+  71:['小雪','🌨️'],73:['中雪','🌨️'],75:['大雪','🌨️'],77:['雪粒','🌨️'],
+  80:['阵雨','🌦️'],81:['阵雨','🌦️'],82:['强阵雨','⛈️'],
+  85:['阵雪','🌨️'],86:['阵雪','🌨️'],
+  95:['雷阵雨','⛈️'],96:['雷阵雨伴冰雹','⛈️'],99:['雷阵雨伴冰雹','⛈️']
+};
+function wmoInfo(code) { const w = WMO[code]; return w ? { text: w[0], icon: w[1] } : { text: '未知', icon: '❓' }; }
+/* 天气归类（用于报表维度分析）：晴 / 多云 / 阴 / 雨 / 雪 / 其他 */
+function wmoGroup(code) {
+  if (code == null) return '无数据';
+  if (code === 0 || code === 1) return '晴';
+  if (code === 2 || code === 3) return '多云/阴';
+  if ((code >= 45 && code <= 48)) return '雾';
+  if (code >= 51 && code <= 67) return '雨';
+  if (code >= 71 && code <= 77) return '雪';
+  if (code >= 80 && code <= 86) return '雨';
+  if (code >= 95) return '雷雨';
+  return '其他';
+}
+
+/* ---------- 天气：Open-Meteo 实时拉取 + 持久缓存 ---------- */
+const SUZHOU = { lat: 31.2989, lon: 120.5853 };
+let weatherCache = {};   // date -> {date, code, tmax, tmin, pop, fetchedAt}
+
+async function fetchWeather(month) {
+  const dim = daysInMonth(month);
+  const first = `${month}-01`;
+  const last = `${month}-${pad2(dim)}`;
+  const today = todayStr();
+  /* 1) 先读本地缓存（覆盖整月） */
+  try {
+    const cached = await getAll(C.weather, { date: cmd.gte(first).and(cmd.lte(last)) });
+    cached.forEach(w => { weatherCache[w.date] = w; });
+  } catch (e) { console.warn('读天气缓存失败', e); }
+  /* 2) 计算缺哪些日期 */
+  const missing = [];
+  for (let d = first; d <= last; d = addDays(d, 1)) if (!weatherCache[d]) missing.push(d);
+  if (!missing.length) return;
+  /* 3) 向 Open-Meteo 拉取一个覆盖本月的窗口（围绕今天，含过去/未来） */
+  const pastDays = Math.min(92, Math.max(0, Math.round((parseDate(first) - parseDate(today)) / 86400000)));
+  const futureDays = Math.min(16, Math.max(0, Math.round((parseDate(last) - parseDate(today)) / 86400000) + 1));
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${SUZHOU.lat}&longitude=${SUZHOU.lon}` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+    `&timezone=Asia%2FShanghai&past_days=${pastDays}&forecast_days=${futureDays}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const daily = json.daily;
+    if (!daily || !daily.time) return;
+    const fetchedAt = new Date().toISOString();
+    const adds = [];
+    daily.time.forEach((d, i) => {
+      if (weatherCache[d]) return;
+      if (d < first || d > last) return;
+      const rec = {
+        date: d,
+        code: daily.weather_code[i],
+        tmax: daily.temperature_2m_max[i],
+        tmin: daily.temperature_2m_min[i],
+        pop: daily.precipitation_probability_max[i],
+        fetchedAt
+      };
+      weatherCache[d] = rec;
+      adds.push(rec);
+    });
+    /* 4) 缓存到云端（失败不影响本次展示） */
+    if (adds.length) {
+      try { await Promise.all(adds.map(r => db.collection(C.weather).add(r))); } catch (e) { console.warn('天气缓存写入失败', e); }
+    }
+  } catch (e) {
+    console.warn('天气拉取失败（不影响业务数据）', e);
+  }
+}
+function weatherOf(ds) { return weatherCache[ds] || null; }
+
+/* ---------- 节点：加载 / 内置同步 / 增删改 ---------- */
+let nodeMap = {};   // date -> [ {_id,date,name,type,color,note} ]
+function nodesOf(ds) { return nodeMap[ds] || []; }
+function isNodeDay(ds) { return !!(nodeMap[ds] && nodeMap[ds].length); }
+/* 日历角标用的简短摘要（最多 2 个，超出加 +N） */
+function nodeBadges(ds) {
+  const list = nodesOf(ds);
+  if (!list.length) return '';
+  const names = list.map(n => n.name);
+  const shown = names.slice(0, 2).join('·');
+  const extra = names.length > 2 ? ` +${names.length - 2}` : '';
+  return shown + extra;
+}
+
+async function loadNodes() {
+  try {
+    const list = await getAll(C.nodes, {});
+    nodeMap = {};
+    list.forEach(n => { (nodeMap[n.date] = nodeMap[n.date] || []).push(n); });
+  } catch (e) { console.warn('节点加载失败', e); nodeMap = {}; }
+}
+
+/* 同步内置节点（幂等：已存在则跳过）。需要修改权限。 */
+async function seedNodes() {
+  if (!requireEdit()) return;
+  try {
+    const exist = await getAll(C.nodes, {});
+    const keys = new Set(exist.map(n => n.date + '|' + n.name + '|' + n.type));
+    const toAdd = BUILTIN_NODES.filter(b => !keys.has(b.date + '|' + b.name + '|' + b.type));
+    if (!toAdd.length) { toast('内置节点已是最新，无需同步'); return; }
+    await Promise.all(toAdd.map(b => db.collection(C.nodes).add(Object.assign({}, b))));
+    await loadNodes();
+    renderCalendar();
+    await addLog('节点', `同步内置节点 ${toAdd.length} 条（国假日/传统节日）`);
+    toast(`已同步内置节点 ${toAdd.length} 条`);
+  } catch (e) { toast('同步内置节点失败：' + e.message, 'err'); }
+}
+
+async function addNode(rec) {
+  if (!requireEdit()) return;
+  try {
+    const doc = Object.assign({ createdAt: new Date().toISOString() }, rec);
+    await db.collection(C.nodes).add(doc);
+    await loadNodes();
+    renderCalendar();
+    if (curNodeDate) openNodeModal(curNodeDate); else renderNodeList();
+    await addLog('节点', `新增节点：${rec.date} ${rec.name}（${NODE_TYPES[rec.type] ? NODE_TYPES[rec.type].label : rec.type}）`);
+    toast('节点已添加');
+  } catch (e) { toast('添加失败：' + e.message, 'err'); }
+}
+async function updateNode(id, patch) {
+  if (!requireEdit()) return;
+  try {
+    await db.collection(C.nodes).doc(id).update(patch);
+    await loadNodes();
+    renderCalendar();
+    renderNodeList();
+    await addLog('节点', `修改节点：${patch.name || ''} ${patch.date || ''}`);
+    toast('节点已更新');
+  } catch (e) { toast('更新失败：' + e.message, 'err'); }
+}
+async function deleteNode(id, label) {
+  if (!requireEdit()) return;
+  if (!confirm(`确定删除节点「${label || ''}」？`)) return;
+  try {
+    await db.collection(C.nodes).doc(id).remove();
+    await loadNodes();
+    renderCalendar();
+    renderNodeList();
+    await addLog('节点', `删除节点：${label || ''}`);
+    toast('节点已删除');
+  } catch (e) { toast('删除失败：' + e.message, 'err'); }
+}
+
+/* ---------- 节点管理弹窗 UI ---------- */
+let curNodeDate = null;
+let editingNodeId = null;
+let nodeModalBound = false;
+
+function nodeTypeOptions(selected) {
+  return Object.entries(NODE_TYPES).map(([k, v]) =>
+    `<option value="${k}" ${k === (selected || 'marketing') ? 'selected' : ''}>${v.label}</option>`).join('');
+}
+
+function openNodeModal(presetDate) {
+  curNodeDate = presetDate || null;
+  editingNodeId = null;
+  const modal = $('#node-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const def = presetDate || (month + '-' + pad2(new Date().getDate()));
+  $('#n-date').value = def;
+  $('#n-name').value = '';
+  $('#n-type').innerHTML = nodeTypeOptions('marketing');
+  $('#n-type').value = 'marketing';
+  $('#n-color').value = NODE_TYPES.marketing.color;
+  $('#n-note').value = '';
+  $('#n-add').style.display = '';
+  $('#n-update').style.display = 'none';
+  $('#n-cancel').style.display = 'none';
+  renderNodeList();
+}
+function closeNodeModal() { const m = $('#node-modal'); if (m) m.classList.add('hidden'); }
+
+function renderNodeList() {
+  const tbody = $('#node-tbody');
+  if (!tbody) return;
+  const ro = !can('edit');
+  const list = Object.values(nodeMap).flat().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#6b7686">暂无节点：点「同步内置节点」导入国假日/传统节日，或手动添加乐园营销节点</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(n => {
+    const t = NODE_TYPES[n.type] || { label: n.type };
+    const act = ro ? '' : `<button class="btn btn-ghost btn-xs" data-act="edit">编辑</button> <button class="btn btn-ghost btn-xs" data-act="del">删除</button>`;
+    return `<tr data-id="${n._id}">
+      <td>${n.date}</td>
+      <td><span class="badge" style="background:${esc(n.color)};color:#fff">${esc(n.name)}</span></td>
+      <td>${esc(t.label)}</td>
+      <td class="sub">${esc(n.note || '')}</td>
+      <td>${act}</td>
+    </tr>`;
+  }).join('');
+  if (ro) return;
+  tbody.querySelectorAll('button[data-act]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.closest('tr').dataset.id;
+      const n = Object.values(nodeMap).flat().find(x => x._id === id);
+      if (!n) return;
+      if (btn.dataset.act === 'del') deleteNode(id, n.name);
+      else editNode(n);
+    };
+  });
+}
+
+function editNode(n) {
+  editingNodeId = n._id;
+  $('#n-date').value = n.date;
+  $('#n-name').value = n.name;
+  $('#n-type').value = n.type;
+  $('#n-color').value = n.color;
+  $('#n-note').value = n.note || '';
+  $('#n-add').style.display = 'none';
+  $('#n-update').style.display = '';
+  $('#n-cancel').style.display = '';
+}
+
+function bindNodeModal() {
+  if (nodeModalBound) return;
+  nodeModalBound = true;
+  const m = $('#node-modal');
+  if (!m) return;
+  $('#m-nodes-btn').onclick = () => openNodeModal();
+  $('#n-close').onclick = closeNodeModal;
+  m.addEventListener('click', (e) => { if (e.target === m) closeNodeModal(); });
+  $('#n-cancel').onclick = () => { editingNodeId = null; openNodeModal(curNodeDate); };
+  $('#n-seed').onclick = () => seedNodes();
+  $('#n-type').onchange = () => { if (!editingNodeId) $('#n-color').value = (NODE_TYPES[$('#n-type').value] || {}).color || '#8c8c8c'; };
+  $('#n-add').onclick = () => {
+    const date = $('#n-date').value;
+    const name = $('#n-name').value.trim();
+    if (!date || !name) { toast('请填写日期与名称', 'err'); return; }
+    addNode({ date, name, type: $('#n-type').value, color: $('#n-color').value, note: $('#n-note').value.trim() });
+    $('#n-name').value = ''; $('#n-note').value = '';
+  };
+  $('#n-update').onclick = () => {
+    if (!editingNodeId) return;
+    const date = $('#n-date').value;
+    const name = $('#n-name').value.trim();
+    if (!date || !name) { toast('请填写日期与名称', 'err'); return; }
+    updateNode(editingNodeId, { date, name, type: $('#n-type').value, color: $('#n-color').value, note: $('#n-note').value.trim() });
+    editingNodeId = null;
+    openNodeModal(curNodeDate);
+  };
+}
 
 /* 密码哈希：UTF-8 字节 → SHA-256（支持中文密码） */
 function hashPwd(s) {
@@ -390,6 +711,7 @@ function enterApp() {
   }
   /* 导出按钮按权限显隐 */
   $('#r-export').style.display = can('export') ? '' : 'none';
+  bindNodeModal();
   loadAll();
 }
 
@@ -451,6 +773,8 @@ async function loadAll() {
     }
     monthRecords = m[0] || null;
     cacheMonthDays(d);
+    /* 加载节点（国假日/传统节日/营销节点） */
+    await loadNodes();
     /* 加载实际账户余额（跨月延续，存 settings） */
     const accRaw = await getSetting('accountBalance');
     accountBalance = accRaw != null ? Number(accRaw) : null;
@@ -711,7 +1035,7 @@ $('#m-sync-account').onclick = async () => {
 /* ================================================================
  * 月度排布
  * ================================================================ */
-function renderMonth() {
+async function renderMonth() {
   $('#m-label').textContent = monthLabel(month);
   $('#m-total').value = monthRecords ? monthRecords.totalBudget || '' : '';
   $('#m-note').value = monthRecords ? monthRecords.note || '' : '';
@@ -736,6 +1060,8 @@ function renderMonth() {
   $('#m-balance').value = Math.max(0, Math.floor(left));
 
   renderAccount();
+  /* 拉取当月苏州天气（实时+持久缓存），失败不影响日历其它内容 */
+  await fetchWeather(month);
   renderCalendar();
 }
 
@@ -766,15 +1092,30 @@ function renderCalendar() {
       'cal-day',
       isToday ? 'today' : '',
       isPast ? 'past' : '',
-      (dow === 0 || dow === 6) ? 'weekend' : ''
+      (dow === 0 || dow === 6) ? 'weekend' : '',
+      isNodeDay(ds) ? 'has-node' : ''
     ].join(' ');
-    html += `<div class="${cls}" data-date="${ds}" ${isLocked ? 'title="该日预算已手动锁定，一键重排不会覆盖"' : ''}>
-      <div class="d">${d}${isLocked ? ' 🔒' : ''}<small>${isToday ? '今天' : ''}</small></div>
+    /* 天气 */
+    const w = weatherOf(ds);
+    const wHtml = w ? `<div class="wth" title="${esc(wmoInfo(w.code).text)} 降水${w.pop != null ? w.pop : 0}%">${wmoInfo(w.code).icon}<span>${Math.round(w.tmin)}~${Math.round(w.tmax)}°</span></div>` : '';
+    /* 节点角标 */
+    const ns = nodesOf(ds);
+    const nHtml = ns.length ? `<div class="node-flag" title="节点：${esc(ns.map(n => n.name).join('、'))}">${ns.slice(0, 4).map(n => `<span class="ndot" style="background:${esc(n.color)}"></span>`).join('')}</div>` : '';
+    /* 悬浮提示聚合 */
+    const titleParts = [];
+    if (isLocked) titleParts.push('该日预算已手动锁定，一键重排不会覆盖');
+    if (w) titleParts.push(`${wmoInfo(w.code).text} ${Math.round(w.tmin)}~${Math.round(w.tmax)}° 降水${w.pop != null ? w.pop : 0}%`);
+    if (ns.length) titleParts.push('节点：' + ns.map(n => n.name).join('、'));
+    const titleAttr = titleParts.length ? `title="${esc(titleParts.join('；'))}"` : '';
+    html += `<div class="${cls}" data-date="${ds}" ${titleAttr}>
+      <div class="d">${d}${isLocked ? ' 🔒' : ''}<small>${isToday ? '今天' : (ns.length ? '📌' : '')}</small></div>
+      ${wHtml}
       ${hasBudget ? `<div class="amt b">预 ${money(b)}</div>` : ''}
       ${filled ? `<div class="amt a">实 ${money(a)}</div>` : ''}
       ${filled && g > 0 ? `<div class="amt r">ROI ${fmtRoi(g, a)}</div>` : ''}
       ${hasBudget && !isPast ? (filled ? '<div class="dot filled"></div>' : '<div class="dot unfilled"></div>') : ''}
       ${hasRemark ? '<div class="remark-flag">📝</div>' : ''}
+      ${nHtml}
     </div>`;
   }
   el.innerHTML = html;
@@ -842,6 +1183,7 @@ function openDayEdit(ds) {
     <div class="actions">
       ${isViewer ? '' : `<button class="btn btn-ghost btn-sm" id="de-lock"${lockedDay ? ' title="解除后该日预算可被「一键重排」重新分配"' : ' title="锁定后「一键重排」不会改动该日预算（手动修改预算保存后也会自动锁定）"'}>${lockedDay ? '🔓 解除锁定' : '🔒 锁定此日'}</button>`}
       <button class="btn btn-ghost btn-sm" id="de-close">关闭</button>
+      ${isViewer ? '' : '<button class="btn btn-ghost btn-sm" id="de-add-node">📌 在此日加节点</button>'}
       ${isViewer ? '' : '<button class="btn btn-primary btn-sm" id="de-save">保存该日数据</button>'}
     </div>`;
   const old = $('#day-edit-panel');
@@ -868,6 +1210,8 @@ function openDayEdit(ds) {
   updateDeSum();
 
   $('#de-close').onclick = () => panel.remove();
+  const deAddNodeBtn = $('#de-add-node');
+  if (deAddNodeBtn) deAddNodeBtn.onclick = () => openNodeModal(ds);
   if (isViewer) return;   // 游客只读：不绑定任何写操作
   /* 锁定 / 解除锁定：锁定日的预算不会被「一键重排」改写 */
   $('#de-lock').onclick = async () => {
@@ -1343,6 +1687,10 @@ async function runReport() {
   const from = $('#r-from').value, to = $('#r-to').value;
   if (!from || !to || from > to) { toast('请选择有效的日期范围', 'err'); return; }
   try {
+    /* 确保报表区间内各月的苏州天气已拉取（实时+缓存） */
+    const repMonths = new Set();
+    for (let d = from; d <= to; d = addDays(d, 1)) repMonths.add(d.slice(0, 7));
+    for (const mm of repMonths) await fetchWeather(mm);
     const list = await getAll(C.days, { date: cmd.gte(from).and(cmd.lte(to)) });
     const planName = {};
     const planCat = {};
@@ -1387,8 +1735,15 @@ async function runReport() {
     for (let d = from; d <= to; d = addDays(d, 1)) days.push(d);
     const dayRows = days.map(ds => {
       const x = dayMap[ds] || { budget: 0, actual: 0, gmv: 0, impressions: 0, remarks: [] };
+      const dow = new Date(ds + 'T00:00:00').getDay();
+      const w = weatherOf(ds);
+      const ns = nodesOf(ds);
       return {
-        日期: ds, 预算: moneyRaw(x.budget), 实际: moneyRaw(x.actual), GMV: moneyRaw(x.gmv),
+        日期: ds,
+        星期: '周' + '日一二三四五六'[dow], _dow: dow,
+        节点: ns.length ? ns.map(n => n.name).join('、') : '—',
+        天气: w ? wmoInfo(w.code).text : '—', _wgroup: w ? wmoGroup(w.code) : '无数据',
+        预算: moneyRaw(x.budget), 实际: moneyRaw(x.actual), GMV: moneyRaw(x.gmv),
         ROI: x.actual > 0 ? +(x.gmv / x.actual).toFixed(2) : '',
         曝光量: x.impressions || 0,
         差额: moneyRaw(x.actual - x.budget),
@@ -1413,10 +1768,37 @@ async function runReport() {
       GMV: moneyRaw(s.gmv), ROI: s.actual > 0 ? +(s.gmv / s.actual).toFixed(2) : '', 曝光量: s.impressions || 0
     })).sort((a, b) => catIndex(a['分类']) - catIndex(b['分类']));
 
-    report = { from, to, days, dayMap, planMap, dayRows, planRows, catRows, detail };
+    const dimAgg = buildDimAgg(dayRows);
+    report = { from, to, days, dayMap, planMap, dayRows, planRows, catRows, detail, dimAgg };
     renderReport();
   } catch (e) { showAlert('r-alert', '报表生成失败：' + e.message, 'err'); }
 }
+
+/* 维度分析：按 周末/工作日、是否节点日、天气 分组统计投流效果 */
+function aggGroup(rows) {
+  let b = 0, a = 0, g = 0, im = 0;
+  rows.forEach(r => { b += r['预算']; a += r['实际']; g += r['GMV']; im += r['曝光量']; });
+  return {
+    天数: rows.length,
+    预算: money(b), 实际: money(a), GMV: money(g),
+    ROI: a > 0 ? +(g / a).toFixed(2) + '倍' : '—',
+    曝光量: fmtNum(im),
+    日均消耗: rows.length ? money(Math.round(a / rows.length)) : '—'
+  };
+}
+function buildDimAgg(dayRows) {
+  const byWeek = { '工作日': [], '周末': [] };
+  const byNode = { '节点日': [], '普通日': [] };
+  const byWeather = {};
+  dayRows.forEach(r => {
+    byWeek[r._dow === 0 || r._dow === 6 ? '周末' : '工作日'].push(r);
+    (r['节点'] && r['节点'] !== '—' ? byNode['节点日'] : byNode['普通日']).push(r);
+    const wg = r._wgroup || '无数据';
+    (byWeather[wg] = byWeather[wg] || []).push(r);
+  });
+  return { byWeek, byNode, byWeather };
+}
+
 function renderReport() {
   if (!report) return;
   hideAlert('r-alert');
@@ -1439,6 +1821,9 @@ function renderReport() {
     const rem = r['备注'] || '';
     return `<tr>
       <td>${r['日期']}</td>
+      <td>${r['星期']}</td>
+      <td class="node-cell" title="${esc(r['节点'])}">${esc(r['节点'])}</td>
+      <td class="wth-cell">${r['天气']}</td>
       <td class="num">${money(r['预算'])}</td>
       <td class="num ${cls}">${money(r['实际'])}</td>
       <td class="num">${money(r['GMV'])}</td>
@@ -1449,6 +1834,19 @@ function renderReport() {
       <td class="remark-cell" title="${esc(rem)}">${esc(rem)}</td>
     </tr>`;
   }).join('');
+
+  /* 维度分析：按星期 / 节点 / 天气 分组统计 */
+  const dim = report.dimAgg;
+  const dimHtml = (title, map) => {
+    const keys = Object.keys(map);
+    if (!keys.length) return '';
+    return `<h4>${title}</h4><div class="table-wrap"><table class="dim-table"><thead><tr><th>${title}</th><th>天数</th><th>预算</th><th>实际</th><th>GMV</th><th>ROI</th><th>曝光量</th><th>日均消耗</th></tr></thead><tbody>`
+      + keys.map(k => { const s = aggGroup(map[k]); return `<tr><td>${k}</td><td>${s.天数}</td><td class="num">${s.预算}</td><td class="num">${s.实际}</td><td class="num">${s.GMV}</td><td class="num roi">${s.ROI}</td><td class="num">${s.曝光量}</td><td class="num">${s.日均消耗}</td></tr>`; }).join('')
+      + `</tbody></table></div>`;
+  };
+  const dimBlock = dimHtml('按星期', dim.byWeek) + dimHtml('按节点', dim.byNode) + dimHtml('按天气', dim.byWeather);
+  const dimEl = $('#r-dim-block');
+  if (dimEl) dimEl.innerHTML = dimBlock || '<p class="hint">暂无维度数据</p>';
 
   /* 按分类汇总 */
   const catRows = report.catRows || [];
@@ -1542,10 +1940,11 @@ $('#r-export').onclick = () => {
   if (!requireExport()) return;
   if (!report) { toast('请先生成报表', 'err'); return; }
   if (typeof XLSX === 'undefined') { toast('Excel 组件未加载', 'err'); return; }
-  const { from, to, dayRows, planRows, catRows, detail } = report;
+  const { from, to, dayRows, planRows, catRows, detail, dimAgg } = report;
   const wb = XLSX.utils.book_new();
 
-  const ws1 = XLSX.utils.json_to_sheet(dayRows);
+  const dayClean = dayRows.map(({ _dow, _wgroup, ...r }) => r);
+  const ws1 = XLSX.utils.json_to_sheet(dayClean);
   XLSX.utils.book_append_sheet(wb, ws1, '每日汇总');
 
   const wsCat = XLSX.utils.json_to_sheet(catRows || []);
@@ -1556,6 +1955,18 @@ $('#r-export').onclick = () => {
 
   const ws3 = XLSX.utils.json_to_sheet(detail);
   XLSX.utils.book_append_sheet(wb, ws3, '明细');
+
+  /* 维度分析 sheet */
+  const dimRows = [];
+  const pushDim = (dim, map) => {
+    Object.keys(map).forEach(k => {
+      const s = aggGroup(map[k]);
+      dimRows.push({ 维度: dim, 分组: k, 天数: s.天数, 预算: s.预算, 实际: s.实际, GMV: s.GMV, ROI: s.ROI, 曝光量: s.曝光量, 日均消耗: s.日均消耗 });
+    });
+  };
+  if (dimAgg) { pushDim('按星期', dimAgg.byWeek); pushDim('按节点', dimAgg.byNode); pushDim('按天气', dimAgg.byWeather); }
+  const wsDim = XLSX.utils.json_to_sheet(dimRows);
+  XLSX.utils.book_append_sheet(wb, wsDim, '维度分析');
 
   XLSX.writeFile(wb, `抖音投流报表_${from}_${to}.xlsx`);
   addLog('报表', `导出 Excel：${from} ~ ${to}`);
