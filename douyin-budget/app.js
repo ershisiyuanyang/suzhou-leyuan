@@ -190,15 +190,29 @@ async function fetchWeather(month) {
   const first = `${month}-01`;
   const last = `${month}-${pad2(dim)}`;
   const today = todayStr();
+  const now = Date.now();
+  const TTL = 12 * 3600 * 1000; // 未来预报 12 小时内不重复拉取
   /* 1) 先读本地缓存（覆盖整月） */
   try {
     const cached = await getAll(C.weather, { date: cmd.gte(first).and(cmd.lte(last)) });
     cached.forEach(w => { weatherCache[w.date] = w; });
   } catch (e) { console.warn('读天气缓存失败', e); }
-  /* 2) 计算缺哪些日期 */
-  const missing = [];
-  for (let d = first; d <= last; d = addDays(d, 1)) if (!weatherCache[d]) missing.push(d);
-  if (!missing.length) return;
+  /* 2) 计算需拉取的日期：
+   *    - 缺失：从未缓存过 → 新增
+   *    - 未来(>=今天)且缓存超过 12h → 刷新（预报会随临近修订）
+   *    - 过去(<今天)：固定，不再拉取 */
+  const missing = [], stale = [];
+  const missingSet = new Set(), staleSet = new Set();
+  for (let d = first; d <= last; d = addDays(d, 1)) {
+    const c = weatherCache[d];
+    if (!c) { missing.push(d); missingSet.add(d); continue; }
+    if (d >= today) {
+      const fa = c.fetchedAt ? Date.parse(c.fetchedAt) : 0;
+      if (now - fa > TTL) { stale.push(d); staleSet.add(d); }
+    }
+    // 过去日期：固定，跳过
+  }
+  if (!missing.length && !stale.length) return;
   /* 3) 向 Open-Meteo 拉取一个覆盖本月的窗口（围绕今天，含过去/未来） */
   const pastDays = Math.min(92, Math.max(0, Math.round((parseDate(first) - parseDate(today)) / 86400000)));
   const futureDays = Math.min(16, Math.max(0, Math.round((parseDate(last) - parseDate(today)) / 86400000) + 1));
@@ -212,10 +226,14 @@ async function fetchWeather(month) {
     const daily = json.daily;
     if (!daily || !daily.time) return;
     const fetchedAt = new Date().toISOString();
-    const adds = [];
+    const adds = [], updates = [];
     daily.time.forEach((d, i) => {
-      if (weatherCache[d]) return;
       if (d < first || d > last) return;
+      const isMissing = missingSet.has(d);
+      const isStale = staleSet.has(d);
+      if (!isMissing && !isStale) return; // 已缓存且新鲜 / 过去固定 → 跳过
+      const prev = weatherCache[d];
+      const prevId = prev ? prev._id : null;
       const rec = {
         date: d,
         code: daily.weather_code[i],
@@ -224,12 +242,16 @@ async function fetchWeather(month) {
         pop: daily.precipitation_probability_max[i],
         fetchedAt
       };
-      weatherCache[d] = rec;
-      adds.push(rec);
+      weatherCache[d] = Object.assign({ _id: prevId }, rec);
+      if (isMissing) adds.push(rec);
+      else if (isStale && prevId) updates.push({ id: prevId, rec });
     });
-    /* 4) 缓存到云端（失败不影响本次展示） */
+    /* 4) 写回云端（缺失新增 / 未来刷新更新；失败不影响本次展示） */
     if (adds.length) {
       try { await Promise.all(adds.map(r => db.collection(C.weather).add(r))); } catch (e) { console.warn('天气缓存写入失败', e); }
+    }
+    if (updates.length) {
+      try { await Promise.all(updates.map(u => db.collection(C.weather).doc(u.id).update(u.rec))); } catch (e) { console.warn('天气缓存更新失败', e); }
     }
   } catch (e) {
     console.warn('天气拉取失败（不影响业务数据）', e);
