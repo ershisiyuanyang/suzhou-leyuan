@@ -182,7 +182,9 @@ function wmoGroup(code) {
 }
 
 /* ---------- 天气：Open-Meteo 实时拉取 + 持久缓存 ---------- */
-const SUZHOU = { lat: 31.2989, lon: 120.5853 };
+/* 天气定位：苏州虎丘区（行政中心一带，约 31.283°N,120.456°E；与苏州工业园区区分开） */
+const SUZHOU = { lat: 31.283, lon: 120.456 };
+const WX_LOC = SUZHOU.lat + ',' + SUZHOU.lon;   // 写入每条天气缓存，定位变化时旧缓存自动失效重拉
 let weatherCache = {};   // date -> {date, code, tmax, tmin, pop, fetchedAt}
 
 async function fetchWeather(month) {
@@ -205,7 +207,7 @@ async function fetchWeather(month) {
   const missingSet = new Set(), staleSet = new Set();
   for (let d = first; d <= last; d = addDays(d, 1)) {
     const c = weatherCache[d];
-    if (!c) { missing.push(d); missingSet.add(d); continue; }
+    if (!c || c.loc !== WX_LOC) { missing.push(d); missingSet.add(d); continue; }  // 无缓存 / 定位不符 → 视为缺失重拉
     if (d >= today) {
       const fa = c.fetchedAt ? Date.parse(c.fetchedAt) : 0;
       if (now - fa > TTL) { stale.push(d); staleSet.add(d); }
@@ -214,7 +216,7 @@ async function fetchWeather(month) {
   }
   if (!missing.length && !stale.length) return;
   /* 3) 向 Open-Meteo 拉取一个覆盖本月的窗口（围绕今天，含过去/未来） */
-  const pastDays = Math.min(92, Math.max(0, Math.round((parseDate(first) - parseDate(today)) / 86400000)));
+  const pastDays = Math.min(92, Math.max(0, Math.round((parseDate(today) - parseDate(first)) / 86400000)));
   const futureDays = Math.min(16, Math.max(0, Math.round((parseDate(last) - parseDate(today)) / 86400000) + 1));
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${SUZHOU.lat}&longitude=${SUZHOU.lon}` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
@@ -240,7 +242,8 @@ async function fetchWeather(month) {
         tmax: daily.temperature_2m_max[i],
         tmin: daily.temperature_2m_min[i],
         pop: daily.precipitation_probability_max[i],
-        fetchedAt
+        fetchedAt,
+        loc: WX_LOC
       };
       weatherCache[d] = Object.assign({ _id: prevId }, rec);
       if (isMissing) adds.push(rec);
