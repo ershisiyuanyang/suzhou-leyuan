@@ -207,12 +207,16 @@ async function fetchWeather(month) {
   const missingSet = new Set(), staleSet = new Set();
   for (let d = first; d <= last; d = addDays(d, 1)) {
     const c = weatherCache[d];
-    if (!c || c.loc !== WX_LOC) { missing.push(d); missingSet.add(d); continue; }  // 无缓存 / 定位不符 → 视为缺失重拉
-    if (d >= today) {
+    if (!c) { missing.push(d); missingSet.add(d); continue; }   // 完全无缓存 → 新增
+    // 已有缓存：定位不符(切区)或未来超 12h → 刷新（覆盖更新已有文档，不新建重复）
+    let need = false;
+    if (c.loc !== WX_LOC) need = true;
+    else if (d >= today) {
       const fa = c.fetchedAt ? Date.parse(c.fetchedAt) : 0;
-      if (now - fa > TTL) { stale.push(d); staleSet.add(d); }
+      if (now - fa > TTL) need = true;
     }
-    // 过去日期：固定，跳过
+    if (need) { stale.push(d); staleSet.add(d); }
+    // 过去日期 & 定位一致 & 新鲜 → 固定，跳过
   }
   if (!missing.length && !stale.length) return;
   /* 3) 向 Open-Meteo 拉取一个覆盖本月的窗口（围绕今天，含过去/未来） */
