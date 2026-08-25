@@ -365,8 +365,13 @@ td.roi { color: #0f7a3d; font-weight: 600; }
 .cal-day .wth { font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 2px; color: #2b6cb0; }
 .cal-day .wth span { font-variant-numeric: tabular-nums; }
 .cal-day.has-node { box-shadow: inset 0 0 0 1.5px rgba(229,77,66,.32); }
-.cal-day .node-flag { position: absolute; bottom: 4px; left: 6px; display: flex; gap: 3px; }
-.cal-day .node-flag .ndot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.cal-day .node-list { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
+.cal-day .npill {
+  font-size: 10px; line-height: 1.45; padding: 1px 6px 1px 7px; border-radius: 4px;
+  background: #f4f6f8; border-left: 3px solid var(--c); color: #2b3440;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.cal-day .npill.more { border-left-color: #c2c8d0; color: #6b7686; background: #eef0f3; font-weight: 600; cursor: default; }
 
 /* ============ 节点管理弹窗 ============ */
 .modal-lg { max-width: 760px; }

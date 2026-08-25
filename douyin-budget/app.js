@@ -1120,9 +1120,14 @@ function renderCalendar() {
     /* 天气 */
     const w = weatherOf(ds);
     const wHtml = w ? `<div class="wth" title="${esc(wmoInfo(w.code).text)} 降水${w.pop != null ? w.pop : 0}%">${wmoInfo(w.code).icon}<span>${Math.round(w.tmin)}~${Math.round(w.tmax)}°</span></div>` : '';
-    /* 节点角标 */
+    /* 节点：直接在格子内铺名称文字（左色条 + 名称），最多 4 条，超出折叠 +N */
     const ns = nodesOf(ds);
-    const nHtml = ns.length ? `<div class="node-flag" title="节点：${esc(ns.map(n => n.name).join('、'))}">${ns.slice(0, 4).map(n => `<span class="ndot" style="background:${esc(n.color)}"></span>`).join('')}</div>` : '';
+    const nodePills = ns.length ? (() => {
+      const vis = ns.slice(0, 4).map(n => `<span class="npill" style="--c:${esc(n.color)}" title="${esc(n.name)}${n.note ? '｜' + esc(n.note) : ''}">${esc(n.name)}</span>`).join('');
+      const extra = ns.length - 4;
+      const more = extra > 0 ? `<span class="npill more" title="${esc(ns.slice(4).map(n => n.name).join('、'))}">+${extra}</span>` : '';
+      return `<div class="node-list">${vis}${more}</div>`;
+    })() : '';
     /* 悬浮提示聚合 */
     const titleParts = [];
     if (isLocked) titleParts.push('该日预算已手动锁定，一键重排不会覆盖');
@@ -1137,7 +1142,7 @@ function renderCalendar() {
       ${filled && g > 0 ? `<div class="amt r">ROI ${fmtRoi(g, a)}</div>` : ''}
       ${hasBudget && !isPast ? (filled ? '<div class="dot filled"></div>' : '<div class="dot unfilled"></div>') : ''}
       ${hasRemark ? '<div class="remark-flag">📝</div>' : ''}
-      ${nHtml}
+      ${nodePills}
     </div>`;
   }
   el.innerHTML = html;
