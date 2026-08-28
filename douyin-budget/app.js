@@ -1365,6 +1365,12 @@ $('#m-rebalance').onclick = async () => {
   if (start > lastDay) { toast('本月已无可排布的剩余日期', 'err'); return; }
   const activePlans = plans.filter(p => p.active !== false);
   if (!activePlans.length) { toast('请先到「投流计划」新增并启用计划', 'err'); return; }
+  /* 停用计划：可排日期内将其预算清零，使其不再出现在后续预算与日历中 */
+  const closedPlans = plans.filter(p => p.active === false);
+  /* 新建计划：启用但当前月尚无任何排布/填报记录（用于日志提示） */
+  const hadAnyDoc = new Set();
+  Object.values(dayCache).forEach(m => Object.values(m).forEach(d => { if (d && d.planId) hadAnyDoc.add(d.planId); }));
+  const newPlans = activePlans.filter(p => !hadAnyDoc.has(p._id));
 
   /* 计算剩余天数 —— 排除"实际已发生"的日期：
      含实际/GMV/曝光任一有值的日期即视为已发生，其预算保持原样、不被重排改写；当日若已填实际同样跳过 */
@@ -1482,9 +1488,12 @@ $('#m-rebalance').onclick = async () => {
     : `\n采用平均分配（未启用周策略）。`;
   const refInfo = ratios
     ? `\n计划明细按前一日（${refDate}）的「${refBasis}」比例预设，每个计划凑整至 100 元，可随后在日历中逐日微调。`
-    : `\n未找到前一日计划数据，计划明细按平均分配，可随后在日历中逐日微调。`;
+    : `\n未找到前一日计划数据，计划 明细按平均分配，可随后在日历中逐日微调。`;
+  const closedInfo = closedPlans.length
+    ? `\n已停用计划（${closedPlans.map(n => n.name).join('、')}）的后续预算将清零，不再计入预算。`
+    : '';
   const approx = money(Math.round(balance / N / 100) * 100);
-  if (!confirm(`剩余可排预算 ${money(balance)}（当月总预算 ${money(total)} − 实际已发生 ${money(actualTotal)}${lockedCount ? ` − 已锁定预算 ${money(lockedBudget)}` : ''}）\n分到 ${N} 天，每日约 ${approx}，再按比例分到 ${activePlans.length} 个计划。\n${start} 之前的日期预算与实际数据均保持不变。${skipInfo}${strat}${refInfo}\n确定执行？`)) return;
+  if (!confirm(`剩余可排预算 ${money(balance)}（当月总预算 ${money(total)} − 实际已发生 ${money(actualTotal)}${lockedCount ? ` − 已锁定预算 ${money(lockedBudget)}` : ''}）\n分到 ${N} 天，每日约 ${approx}，再按比例分到 ${activePlans.length} 个计划（${newPlans.length ? '含新建 ' + newPlans.length + ' 个' : '无新建'}）。\n${start} 之前的日期预算与实际数据均保持不变。${skipInfo}${strat}${refInfo}${closedInfo}\n确定执行？`)) return;
 
   try {
     /* 重排只改写 ${start} 及之后、且"实际未发生"的日期；已发生日期（含当日若有实际/GMV/曝光）一律保持不动，避免误改历史预算 */
@@ -1509,7 +1518,25 @@ $('#m-rebalance').onclick = async () => {
       };
       await db.collection(C.days).doc(id).set(data);
       if (!dayCache[item.ds]) dayCache[item.ds] = {};
-      dayCache[item.ds][item.planId] = { _id: id, ...data };
+      dayCache[item.ds][planId] = { _id: id, ...data };
+    }
+    /* 清理已停用计划：在可排日期内将其预算清零（不影响已发生/手动锁定日），使其不再出现在后续预算与日历中 */
+    let clearedCount = 0;
+    for (const ds of openDays) {
+      for (const p of closedPlans) {
+        const old = dayDoc(ds, p._id);
+        if (old && (old.budget || 0) > 0) {
+          const id = dayId(ds, p._id);
+          await db.collection(C.days).doc(id).set({
+            date: ds, planId: p._id, budget: 0,
+            actual: old.actual || 0, gmv: old.gmv || 0, impressions: old.impressions || 0,
+            updatedAt: new Date().toISOString()
+          });
+          if (!dayCache[ds]) dayCache[ds] = {};
+          dayCache[ds][p._id] = { _id: id, date: ds, planId: p._id, budget: 0, actual: old.actual || 0, gmv: old.gmv || 0, impressions: old.impressions || 0, updatedAt: new Date().toISOString() };
+          clearedCount++;
+        }
+      }
     }
     /* 日志明细到计划：各天预算因周策略/比例略有差异，展示区间 */
     const planDetail = activePlans.map(p => {
@@ -1519,7 +1546,7 @@ $('#m-rebalance').onclick = async () => {
       const mn = Math.min(...bs), mx = Math.max(...bs);
       return `${p.name} ${mn === mx ? '¥' + mn + '/天' : '¥' + mn + '~' + mx + '/天'}`;
     }).join('；');
-    await addLog('一键重排', `${monthLabel(month)}：按剩余可排预算 ${money(balance)}（总预算 ${money(total)} − 实际 ${money(actualTotal)}${lockedCount ? ` − 锁定 ${money(lockedBudget)}` : ''}）重排 ${N} 天${pushOn ? '，周策略（周五六日上浮）' : ''}，每日凑整至 100 元；跳过 ${occurred.size} 个已发生日 + ${lockedCount} 个手动锁定日；计划明细按前一日${refDate ? '（' + refDate + '）' : ''}「${refBasis}」比例预设、每计划凑整至 100 元。计划明细：${planDetail}`);
+    await addLog('一键重排', `${monthLabel(month)}：按剩余可排预算 ${money(balance)}（总预算 ${money(total)} − 实际 ${money(actualTotal)}${lockedCount ? ` − 锁定 ${money(lockedBudget)}` : ''}）重排 ${N} 天${pushOn ? '，周策略（周五六日上浮）' : ''}，每日凑整至 100 元；跳过 ${occurred.size} 个已发生日 + ${lockedCount} 个手动锁定日；${newPlans.length ? '本次新建计划 ' + newPlans.map(n => n.name).join('、') + '；' : ''}${closedPlans.length ? '清零 ' + closedPlans.length + ' 个已停用计划（' + closedPlans.map(n => n.name).  join('、') + '）后续预算；' : ''}计划明细按前一日${refDate ? '（' + refDate + '）' : ''}「${refBasis}」比例预设、每计划凑整至 100 元。计划明细：${planDetail}`);
     await refreshMonth();
     renderOverview();
     toast('重排完成');
