@@ -1518,7 +1518,7 @@ $('#m-rebalance').onclick = async () => {
       };
       await db.collection(C.days).doc(id).set(data);
       if (!dayCache[item.ds]) dayCache[item.ds] = {};
-      dayCache[item.ds][planId] = { _id: id, ...data };
+      dayCache[item.ds][item.planId] = { _id: id, ...data };
     }
     /* 清理已停用计划：在可排日期内将其预算清零（不影响已发生/手动锁定日），使其不再出现在后续预算与日历中 */
     let clearedCount = 0;
