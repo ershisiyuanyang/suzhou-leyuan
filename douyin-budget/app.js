@@ -1554,10 +1554,7 @@ $('#m-rebalance').onclick = async () => {
 };
 
 $('#m-prev').onclick = async () => { month = addDays(month + '-01', -1).slice(0, 7); await switchMonth(); };
-$('#m-next').onclick = async () => {
-  const d = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) + 1, 1);
-  month = fmtMonth(d); await switchMonth();
-};
+$('#m-next').onclick = async () => { month = addDays(month + '-01', daysInMonth(month)).slice(0, 7); await switchMonth(); };
 async function switchMonth() {
   try {
     const [m, d] = await Promise.all([
